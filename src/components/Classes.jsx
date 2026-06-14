@@ -608,7 +608,7 @@ export default function Classes({ setActiveSection, isHomepage }) {
                         {getClassEmoji(c.name)} {c.name}
                       </span>
                       {spotsLeft <= 3 && spotsLeft > 0 && (
-                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#c5a880" strokeWidth="2.5" style={{ marginLeft: '0.25rem', flexShrink: 0 }}>
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--primary-color)" strokeWidth="2.5" style={{ marginLeft: '0.25rem', flexShrink: 0 }}>
                           <circle cx="12" cy="12" r="10" />
                           <polyline points="12 6 12 12 16 14" />
                         </svg>
@@ -733,7 +733,7 @@ export default function Classes({ setActiveSection, isHomepage }) {
                         position: 'absolute',
                         cursor: 'pointer',
                         top: 0, left: 0, right: 0, bottom: 0,
-                        backgroundColor: showOnlyBooked ? '#c5a880' : '#374151',
+                        backgroundColor: showOnlyBooked ? 'var(--primary-color)' : '#374151',
                         transition: '.4s',
                         borderRadius: '24px'
                       }}>
