@@ -38,7 +38,8 @@ export default function About() {
 
             <div style={{ padding: '1.25rem', backgroundColor: 'var(--bg-card)', borderRadius: '1rem', border: '1px solid var(--border-color)' }}>
               <h4 style={{ fontFamily: 'var(--font-display)', marginBottom: '0.5rem', color: 'white' }}>Quick Info</h4>
-              <p style={{ fontSize: '0.9rem', color: 'var(--text-secondary)' }}>
+              <p style={{ fontSize: '0.9rem', color: 'var(--text-secondary)', lineHeight: '1.6' }}>
+                🏢 <strong>Company:</strong> THE BASE FITNESS SDN BHD (1660350-U)<br />
                 📍 <strong>Location:</strong> {gymSettings.address}<br />
                 📞 <strong>Phone:</strong> {gymSettings.phone}<br />
                 ⏰ <strong>Hours:</strong> {gymSettings.operatingHours}

@@ -215,40 +215,40 @@ function AppContent() {
                 <section className="section" style={{ padding: '3rem 0 0 0' }}>
                   <div className="container">
                     <div style={{
-                      background: 'linear-gradient(135deg, var(--bg-card) 0%, rgba(220, 38, 38, 0.05) 100%)',
-                      border: '2px dashed var(--primary-color)',
+                      background: '#f8fafc',
+                      border: '3px solid var(--primary-color)',
                       borderRadius: '1.5rem',
                       padding: '2.5rem 2rem',
                       textAlign: 'center',
                       position: 'relative',
                       overflow: 'hidden',
-                      boxShadow: '0 8px 32px rgba(220, 38, 38, 0.1)'
+                      boxShadow: '0 12px 40px rgba(0, 0, 0, 0.15)'
                     }}>
-                      {/* Decorative red dot glow */}
-                      <div style={{ position: 'absolute', top: '-20px', right: '-20px', width: '80px', height: '80px', borderRadius: '50%', background: 'var(--primary-color)', filter: 'blur(40px)', opacity: 0.3 }}></div>
                       
-                      <span className="badge badge-primary" style={{ marginBottom: '1rem', letterSpacing: '1px', textTransform: 'uppercase', fontWeight: '800' }}>
+                      <span className="badge" style={{ marginBottom: '1rem', letterSpacing: '1px', textTransform: 'uppercase', fontWeight: '800', backgroundColor: 'var(--primary-color)', color: 'white', display: 'inline-block', padding: '0.35rem 0.75rem', borderRadius: '0.5rem' }}>
                         🚨 Limited Launch Offer
                       </span>
                       
-                      <h2 style={{ fontSize: '2rem', fontFamily: 'var(--font-display)', color: 'white', marginBottom: '1rem', textTransform: 'uppercase', letterSpacing: '-0.5px' }}>
+                      <h2 style={{ fontSize: '2.2rem', fontFamily: 'var(--font-display)', color: 'var(--primary-color)', marginBottom: '0.8rem', textTransform: 'uppercase', letterSpacing: '-0.5px', fontWeight: '800' }}>
                         首 50 位 免会员费!
                       </h2>
-                      <h3 style={{ fontSize: '1.5rem', fontFamily: 'var(--font-display)', color: 'var(--primary-color)', marginBottom: '1.25rem', fontWeight: '800' }}>
-                        FIRST 50 CUSTOMERS ENJOY FREE MEMBERSHIP!
+                      <h3 style={{ fontSize: '1.5rem', fontFamily: 'var(--font-display)', color: '#0f172a', marginBottom: '1.25rem', fontWeight: '800' }}>
+                        FIRST 50 CUSTOMERS ENJOY <span style={{ color: 'var(--primary-color)' }}>FREE MEMBERSHIP!</span>
                       </h3>
                       
-                      <p style={{ color: 'var(--text-secondary)', maxWidth: '650px', margin: '0 auto 2rem auto', fontSize: '1.05rem', lineHeight: '1.6' }}>
-                        🔥 <strong>SOMETHING BIG IS COMING TO KLUANG TOWN AREA!</strong><br />
-                        Welcome to <strong>THE BASE FITNESS</strong>—your brand-new premium fitness destination. Be among the first 50 early birds and get your <strong>Registration/Membership Fee 100% WAIVED</strong>. 
+                      <p style={{ color: '#334155', maxWidth: '650px', margin: '0 auto 2rem auto', fontSize: '1.05rem', lineHeight: '1.6' }}>
+                        🔥 <strong style={{ color: '#0f172a' }}>SOMETHING BIG IS COMING TO KLUANG TOWN AREA!</strong><br />
+                        Welcome to <strong style={{ color: '#000000' }}>THE BASE FITNESS</strong>—your brand-new premium fitness destination. Be among the first 50 early birds and get your <strong style={{ color: 'var(--primary-color)' }}>Registration/Membership Fee 100% WAIVED</strong>. 
                         First come, first served!
                       </p>
                       
                       <div style={{ display: 'flex', flexWrap: 'wrap', gap: '1rem', justifyContent: 'center' }}>
                         <button 
-                          className="btn btn-primary"
+                          className="btn"
                           onClick={() => setActiveSection('pricing')}
-                          style={{ padding: '0.8rem 2rem', fontWeight: '800', borderRadius: '0.75rem' }}
+                          style={{ padding: '0.8rem 2rem', fontWeight: '800', borderRadius: '0.75rem', backgroundColor: '#0f172a', color: 'white', border: '1px solid #0f172a', transition: 'var(--transition-smooth)', cursor: 'pointer' }}
+                          onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = 'var(--primary-color)'; e.currentTarget.style.borderColor = 'var(--primary-color)'; }}
+                          onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = '#0f172a'; e.currentTarget.style.borderColor = '#0f172a'; }}
                         >
                           🎟️ View Membership Deals
                         </button>
@@ -256,8 +256,10 @@ function AppContent() {
                           href="https://www.instagram.com/thebasefitness.kluang/" 
                           target="_blank" 
                           rel="noreferrer"
-                          className="btn btn-secondary" 
-                          style={{ padding: '0.8rem 2rem', fontWeight: '700', borderRadius: '0.75rem', display: 'inline-flex', alignItems: 'center', gap: '0.5rem' }}
+                          className="btn" 
+                          style={{ padding: '0.8rem 2rem', fontWeight: '700', borderRadius: '0.75rem', display: 'inline-flex', alignItems: 'center', gap: '0.5rem', backgroundColor: 'transparent', color: '#0f172a', border: '2px solid #0f172a', transition: 'var(--transition-smooth)' }}
+                          onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = '#0f172a'; e.currentTarget.style.color = 'white'; }}
+                          onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = 'transparent'; e.currentTarget.style.color = '#0f172a'; }}
                         >
                           📸 Follow Our Instagram
                         </a>
@@ -310,7 +312,7 @@ function AppContent() {
                 <img src={`${import.meta.env.BASE_URL}logo.jpg`} alt="The Base Fitness Logo" style={{ height: '55px', width: 'auto', display: 'block' }} />
               </div>
               <p style={{ fontSize: '0.9rem', marginBottom: '1.5rem', maxWidth: '300px' }}>
-                Kluang's premier strength conditioning and Muay Thai training academy.
+                Kluang's premier strength conditioning and fitness academy.
               </p>
               <div style={{ display: 'flex', gap: '1rem' }}>
                 <a 
@@ -346,7 +348,7 @@ function AppContent() {
               <h4>Gym Services</h4>
               <ul className="footer-links">
                 <li><a href="#about" onClick={(e) => { e.preventDefault(); setActiveSection('about'); }}>Gym Facilities</a></li>
-                <li><a href="#classes" onClick={(e) => { e.preventDefault(); setActiveSection('classes'); }}>Muay Thai Arena</a></li>
+                <li><a href="#about" onClick={(e) => { e.preventDefault(); setActiveSection('about'); }}>Why Join Us</a></li>
                 <li><a href="#classes" onClick={(e) => { e.preventDefault(); setActiveSection('classes'); }}>Group Classes</a></li>
                 <li><a href="#trainers" onClick={(e) => { e.preventDefault(); setActiveSection('trainers'); }}>Personal Training</a></li>
               </ul>
@@ -363,7 +365,7 @@ function AppContent() {
           </div>
 
           <div className="footer-bottom">
-            <p>&copy; {new Date().getFullYear()} {gymSettings.name}. All rights reserved.</p>
+            <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>&copy; {new Date().getFullYear()} THE BASE FITNESS SDN BHD (1660350-U). All rights reserved.</p>
             <div style={{ display: 'flex', gap: '1rem', fontSize: '0.8rem' }}>
               <a href="#home" onClick={(e) => { e.preventDefault(); setActiveSection('home'); }}>Back to Top</a>
             </div>
