@@ -16,6 +16,8 @@ export default function ConfigPanel({ setActiveSection }) {
     ptBookings,
     cancelPtBooking,
     assignTrainerToMember,
+    trialBookings,
+    setTrialBookings,
     logout
   } = useContext(GymContext);
 
@@ -161,6 +163,12 @@ export default function ConfigPanel({ setActiveSection }) {
               onClick={() => setActiveTab('ptbookings')}
             >
               🤝 All PT Sessions
+            </button>
+            <button 
+              className={`config-tab-btn ${activeTab === 'trialbookings' ? 'active' : ''}`}
+              onClick={() => setActiveTab('trialbookings')}
+            >
+              🎫 Trial Bookings
             </button>
             <button 
               className={`config-tab-btn ${activeTab === 'assignments' ? 'active' : ''}`}
@@ -694,6 +702,88 @@ export default function ConfigPanel({ setActiveSection }) {
               </div>
             )}
 
+            {/* GUEST TRIAL BOOKINGS VIEW */}
+            {activeTab === 'trialbookings' && (
+              <div>
+                <h3 style={{ fontFamily: 'var(--font-display)', marginBottom: '1.5rem', color: 'white' }}>Guest Trial Class Requests</h3>
+                <p style={{ color: 'var(--text-secondary)', marginBottom: '1.5rem', fontSize: '0.95rem' }}>
+                  A list of all free trial session requests submitted by guest visitors. Gym staff can contact them to confirm and approve their trial.
+                </p>
+                {trialBookings && trialBookings.length > 0 ? (
+                  <div className="list-table-container">
+                    <table className="list-table">
+                      <thead>
+                        <tr>
+                          <th>Guest Details</th>
+                          <th>Requested Class</th>
+                          <th>Status</th>
+                          <th>Action</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {trialBookings.map(b => (
+                          <tr key={b.id}>
+                            <td data-label="Guest Details">
+                              <strong>{b.name}</strong>
+                              <span style={{ display: 'block', fontSize: '0.75rem', color: 'var(--text-secondary)' }}>{b.email}</span>
+                              <span style={{ display: 'block', fontSize: '0.75rem', color: 'var(--text-secondary)' }}>{b.phone}</span>
+                            </td>
+                            <td data-label="Requested Class">
+                              <strong>{b.className}</strong>
+                              <span style={{ display: 'block', fontSize: '0.75rem', color: 'var(--text-secondary)' }}>
+                                {b.classDay} at {b.classTime}
+                              </span>
+                              <span style={{ display: 'block', fontSize: '0.75rem', color: 'var(--text-secondary)' }}>
+                                Coach: {b.classTrainer}
+                              </span>
+                            </td>
+                            <td data-label="Status">
+                              <span className={`badge ${b.status === 'confirmed' ? 'badge-success' : 'badge-danger'}`}>
+                                {b.status === 'confirmed' ? 'Confirmed' : 'Pending Callback'}
+                              </span>
+                            </td>
+                            <td data-label="Action">
+                              <div style={{ display: 'flex', gap: '0.5rem' }}>
+                                {b.status !== 'confirmed' && (
+                                  <button 
+                                    className="btn btn-primary" 
+                                    style={{ padding: '0.3rem 0.6rem', fontSize: '0.7rem' }}
+                                    onClick={() => {
+                                      setTrialBookings(prev => prev.map(item => 
+                                        item.id === b.id ? { ...item, status: 'confirmed' } : item
+                                      ));
+                                      alert(`Trial status updated to Confirmed for ${b.name}!`);
+                                    }}
+                                  >
+                                    Confirm
+                                  </button>
+                                )}
+                                <button 
+                                  className="btn btn-danger" 
+                                  style={{ padding: '0.3rem 0.6rem', fontSize: '0.7rem' }}
+                                  onClick={() => {
+                                    if (window.confirm(`Remove trial request for ${b.name}?`)) {
+                                      setTrialBookings(prev => prev.filter(item => item.id !== b.id));
+                                    }
+                                  }}
+                                >
+                                  Delete
+                                </button>
+                              </div>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                ) : (
+                  <div style={{ backgroundColor: 'var(--bg-card)', border: '1px solid var(--border-color)', borderRadius: '1rem', padding: '3.5rem', textAlign: 'center', color: 'var(--text-secondary)' }}>
+                    <p>No guest trial class requests submitted yet.</p>
+                  </div>
+                )}
+              </div>
+            )}
+
             {/* COACH ASSIGNMENTS PANEL */}
             {activeTab === 'assignments' && (
               <div>
@@ -813,6 +903,9 @@ export default function ConfigPanel({ setActiveSection }) {
             </button>
             <button className={`drawer-item ${activeTab === 'ptbookings' ? 'active' : ''}`} onClick={() => { setActiveTab('ptbookings'); setIsTabsDrawerOpen(false); }}>
               🤝 All PT Sessions
+            </button>
+            <button className={`drawer-item ${activeTab === 'trialbookings' ? 'active' : ''}`} onClick={() => { setActiveTab('trialbookings'); setIsTabsDrawerOpen(false); }}>
+              🎫 Trial Bookings
             </button>
             <button className={`drawer-item ${activeTab === 'assignments' ? 'active' : ''}`} onClick={() => { setActiveTab('assignments'); setIsTabsDrawerOpen(false); }}>
               📋 Coach Assignments

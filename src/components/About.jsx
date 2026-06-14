@@ -15,7 +15,7 @@ export default function About() {
             </span>
             <h2>Why Join THE BASE FITNESS?</h2>
             <p style={{ color: 'var(--text-secondary)', marginBottom: '1.5rem' }}>
-              At <strong>{gymSettings.name}</strong>, we provide a modern, high-energy space built to maximize your training success. Rebuild your health, track your progress, and unlock your true physical potential with our premium services.
+              At <strong>{gymSettings.name}</strong>, we provide a modern, high-energy space built to maximize your training success. Rebuild your health, prepare for the competition stage with certified prep coaches, track your progress, and unlock your true physical potential with our premium services.
             </p>
             
             <div className="about-features" style={{ marginBottom: '2rem', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
@@ -30,6 +30,9 @@ export default function About() {
               </div>
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', fontSize: '1.1rem', color: 'white', fontWeight: '600' }}>
                 <span style={{ color: '#22c55e', fontSize: '1.2rem' }}>✅</span> Modern Training Environment
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', fontSize: '1.1rem', color: 'white', fontWeight: '600' }}>
+                <span style={{ color: '#22c55e', fontSize: '1.2rem' }}>✅</span> Competition Coaching & Athlete Prep
               </div>
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', fontSize: '1.1rem', color: 'white', fontWeight: '600' }}>
                 <span style={{ color: '#22c55e', fontSize: '1.2rem' }}>✅</span> Stronger Community, Better Results

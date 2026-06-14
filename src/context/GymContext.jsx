@@ -38,6 +38,7 @@ export const THEMES = {
 };
 
 // Initial Seed Data
+// Initial Seed Data
 const DEFAULT_GYM_SETTINGS = {
   name: 'The Base Fitness Kluang Johor',
   address: 'Jalan Bakawali, 81440 Kluang, Johor, Malaysia',
@@ -46,43 +47,43 @@ const DEFAULT_GYM_SETTINGS = {
   operatingHours: 'Daily: 8:00 AM - 10:00 PM',
   theme: 'red',
   currency: 'RM',
-  description: 'Welcome to The Base Fitness Kluang. Rebuild your health, track your progress, and unleash your peak potential with our brand new machines, certified trainers, and Anovator body composition analyze.'
+  description: 'Welcome to The Base Fitness Kluang. Rebuild your health, prepare for the competition stage under certified coaches, track your progress, and unleash your peak potential with our brand new machines, competition-prep trainers, and Anovator body composition analyze.'
 };
 
 const DEFAULT_TRAINERS = [
   {
     id: 't1',
     name: 'Coach Alex Tan',
-    specialties: ['Body Transformation', 'Functional Fitness', 'Cardio Boxing'],
-    bio: 'Certified personal trainer with over 10 years of coaching experience. Specializes in building core stamina, weight management, and high-intensity body transformations.',
+    specialties: ['Competition Coaching', 'Body Transformation', 'Functional Fitness', 'Cardio Boxing'],
+    bio: 'Certified personal trainer and contest prep coach with over 10 years of coaching experience. Specializes in building stage-ready physiques, weight management, and high-intensity body transformations.',
     photo: 'coach_alex.png',
     experienceYears: 12,
     certifications: ['NASM Certified Personal Trainer (CPT)', 'NASM Performance Enhancement Specialist', 'First Aid & CPR Certified'],
-    achievements: ['Certified Personal Trainer (NASM)', 'Coached 150+ transformations in Kluang area'],
+    achievements: ['Certified Personal Trainer (NASM)', 'Coached 150+ transformations in Kluang area', 'Trainer for 20+ stage competition athletes'],
     clientSuccessCount: '150+ Transformations',
     instagram: 'alextan_fitness'
   },
   {
     id: 't2',
     name: 'Coach Marcus Lim',
-    specialties: ['Strength Training', 'Bodybuilding', 'Powerlifting'],
-    bio: 'Certified strength conditioning specialist. Passionate about posture correction, functional movements, and helping members hit their personal record lifts.',
+    specialties: ['Powerlifting & Bodybuilding Prep', 'Strength Training', 'Competition Coaching'],
+    bio: 'Certified strength conditioning specialist and active competitive powerlifter. Passionate about posture correction, competitive compound lifting, and helping athletes prep for Johor powerlifting meets.',
     photo: 'personal_training.png',
     experienceYears: 8,
     certifications: ['ASCA Strength & Conditioning Coach L1', 'Certified Powerlifting Coach (USPA)', 'Functional Movement Screen (FMS) Certified'],
-    achievements: ['Johor Powerlifting Open 2023 Gold Medalist (93kg)', 'Coached 15+ athletes to national level PRs'],
+    achievements: ['Johor Powerlifting Open 2023 Gold Medalist (93kg)', 'Coached 15+ powerlifters to national podium finishes'],
     clientSuccessCount: '200+ Transformations',
     instagram: 'marcus_strength'
   },
   {
     id: 't3',
     name: 'Coach Sarah Wong',
-    specialties: ['Weight Loss & HIIT', 'Yoga & Flexibility', 'Nutrition Coaching'],
-    bio: 'Dedicated fitness therapist. Focuses on holistic lifestyle transformations, flexible dieting strategies, and sustainable fat loss coaching.',
+    specialties: ['Bikini & Physique Prep', 'Weight Loss & HIIT', 'Yoga & Flexibility', 'Nutrition Coaching'],
+    bio: 'Dedicated fitness therapist and nutrition prep specialist. Focuses on bikini competition styling, metabolic staging prep, and sustainable fat loss coaching for athletes.',
     photo: 'hero.png',
     experienceYears: 6,
     certifications: ['Precision Nutrition Level 1 (PN1) Certified', 'Certified Weight Loss Specialist (NASM)', 'RYT-200 Yoga Teacher'],
-    achievements: ['Co-author of "Sustainable Nutrition Guide"', 'Fitness Speaker at Johor Wellness Summit 2024'],
+    achievements: ['Co-author of "Athlete Prep Nutrition Guide"', 'Fitness Speaker at Johor Wellness Summit 2024', 'Prep coach for 10+ Bikini category medalists'],
     clientSuccessCount: '300+ Nutritional Programs',
     instagram: 'sarahwong_nutrition'
   }
@@ -109,19 +110,19 @@ const DEFAULT_PACKAGES = [
   },
   {
     id: 'p3',
-    name: 'Premium Strength & Conditioning Pass',
+    name: 'Premium Strength & Competition Pass',
     price: 180,
     billingPeriod: 'per month',
-    features: ['Unlimited general gym floor access', 'Access to brand new fitness machines', 'Free Anovator body composition analyze', 'Priority booking for all group classes'],
+    features: ['Unlimited general gym floor access', 'Access to brand new fitness machines & posing area', 'Free Anovator body composition analyze', 'Priority booking for all group classes & posing workshops'],
     isPopular: false,
     badge: 'Fitness Pass'
   },
   {
     id: 'p4',
-    name: 'VIP Personal Coaching Elite',
+    name: 'VIP Personal Coaching & Athlete Prep',
     price: 450,
     billingPeriod: 'per month',
-    features: ['All-Access gym membership included', '8 sessions (1-on-1) with an assigned Personal Trainer', 'Customized weekly workout & nutrition tracking plans', 'Exclusive WhatsApp support with your coach'],
+    features: ['All-Access gym membership included', '8 sessions (1-on-1) with a certified Competition Prep Coach', 'Customized weekly contest prep, posing drills & nutrition plans', 'Exclusive WhatsApp support with your coach'],
     isPopular: false,
     badge: 'Premium Coaching'
   }
@@ -131,10 +132,10 @@ const DEFAULT_CLASSES = [
   // Monday
   { id: 'c1', name: 'Functional Machine Training', day: 'Monday', time: '08:00 AM - 09:30 AM', trainer: 'Coach Alex Tan', room: 'Gym Floor', capacity: 15, enrolled: ['member@gmail.com'] },
   { id: 'c2', name: 'HIIT Circuit', day: 'Monday', time: '06:30 PM - 07:30 PM', trainer: 'Coach Sarah Wong', room: 'Studio B', capacity: 20, enrolled: [] },
-  { id: 'c3', name: 'Powerlifting Base', day: 'Monday', time: '08:00 PM - 09:30 PM', trainer: 'Coach Marcus Lim', room: 'Gym Floor', capacity: 8, enrolled: [] },
+  { id: 'c3', name: 'Powerlifting & Competition Prep', day: 'Monday', time: '08:00 PM - 09:30 PM', trainer: 'Coach Marcus Lim', room: 'Gym Floor', capacity: 8, enrolled: [] },
   
   // Tuesday
-  { id: 'c4', name: 'Body Recomp Clinic', day: 'Tuesday', time: '06:00 PM - 07:30 PM', trainer: 'Coach Alex Tan', room: 'Gym Floor', capacity: 12, enrolled: [] },
+  { id: 'c4', name: 'Athlete Body Recomp Clinic', day: 'Tuesday', time: '06:00 PM - 07:30 PM', trainer: 'Coach Alex Tan', room: 'Gym Floor', capacity: 12, enrolled: [] },
   { id: 'c5', name: 'Vinyasa Flow Yoga', day: 'Tuesday', time: '08:00 PM - 09:00 PM', trainer: 'Coach Sarah Wong', room: 'Studio B', capacity: 15, enrolled: [] },
 
   // Wednesday
@@ -143,7 +144,7 @@ const DEFAULT_CLASSES = [
 
   // Thursday
   { id: 'c8', name: 'Zumba & Aerobics', day: 'Thursday', time: '06:30 PM - 07:30 PM', trainer: 'Coach Sarah Wong', room: 'Studio B', capacity: 25, enrolled: [] },
-  { id: 'c9', name: 'Advanced Strength Conditioning', day: 'Thursday', time: '08:00 PM - 09:30 PM', trainer: 'Coach Alex Tan', room: 'Gym Floor', capacity: 10, enrolled: [] },
+  { id: 'c9', name: 'Advanced Athlete Competition Prep', day: 'Thursday', time: '08:00 PM - 09:30 PM', trainer: 'Coach Alex Tan', room: 'Gym Floor', capacity: 10, enrolled: [] },
 
   // Friday
   { id: 'c10', name: 'Functional Core Strength', day: 'Friday', time: '06:00 PM - 07:00 PM', trainer: 'Coach Marcus Lim', room: 'Gym Floor', capacity: 12, enrolled: [] },
@@ -151,54 +152,53 @@ const DEFAULT_CLASSES = [
 
   // Saturday
   { id: 'c12', name: 'Weekend Yoga Flow', day: 'Saturday', time: '09:00 AM - 10:00 AM', trainer: 'Coach Sarah Wong', room: 'Studio B', capacity: 15, enrolled: [] },
-  { id: 'c13', name: 'Body Conditioning & Power', day: 'Saturday', time: '10:30 AM - 12:00 PM', trainer: 'Coach Alex Tan', room: 'Gym Floor', capacity: 25, enrolled: [] },
+  { id: 'c13', name: 'Competition Posing & Athlete Conditioning', day: 'Saturday', time: '10:30 AM - 12:00 PM', trainer: 'Coach Alex Tan', room: 'Gym Floor', capacity: 25, enrolled: [] },
 
   // Sunday
-  { id: 'c14', name: 'Strength Conditioning', day: 'Sunday', time: '10:00 AM - 11:30 AM', trainer: 'Coach Marcus Lim', room: 'Gym Floor', capacity: 15, enrolled: [] }
+  { id: 'c14', name: 'Athlete Peak Performance Prep', day: 'Sunday', time: '10:00 AM - 11:30 AM', trainer: 'Coach Marcus Lim', room: 'Gym Floor', capacity: 15, enrolled: [] }
 ];
 
 export const GymProvider = ({ children }) => {
-  // Migration to clear old bf_ keys (from the initial orange phase) to default to red
-  if (localStorage.getItem('bf_settings') && !localStorage.getItem('bf_v1_settings')) {
-    localStorage.removeItem('bf_settings');
-    localStorage.removeItem('bf_trainers');
-    localStorage.removeItem('bf_packages');
-    localStorage.removeItem('bf_timetable');
-    localStorage.removeItem('bf_current_user');
-    localStorage.removeItem('bf_members');
-    localStorage.removeItem('bf_pt_bookings');
+  // Migration to clear old keys to load new competition-focused seed data
+  if ((localStorage.getItem('bf_settings') || localStorage.getItem('bf_v1_settings') || localStorage.getItem('bf_v2_settings')) && !localStorage.getItem('bf_v3_settings')) {
+    const keysToRemove = [
+      'bf_settings', 'bf_trainers', 'bf_packages', 'bf_timetable', 'bf_current_user', 'bf_members', 'bf_pt_bookings', 'bf_trainer_blocks',
+      'bf_v1_settings', 'bf_v1_trainers', 'bf_v1_packages', 'bf_v1_timetable', 'bf_v1_current_user', 'bf_v1_members', 'bf_v1_pt_bookings', 'bf_v1_trainer_blocks',
+      'bf_v2_settings', 'bf_v2_trainers', 'bf_v2_packages', 'bf_v2_timetable', 'bf_v2_current_user', 'bf_v2_members', 'bf_v2_pt_bookings', 'bf_v2_trainer_blocks', 'bf_v2_trial_bookings'
+    ];
+    keysToRemove.forEach(k => localStorage.removeItem(k));
   }
 
   // Load initial states from LocalStorage or Fallback to default seed data
   const [gymSettings, setGymSettings] = useState(() => {
-    const saved = localStorage.getItem('bf_v1_settings');
+    const saved = localStorage.getItem('bf_v3_settings');
     return saved ? JSON.parse(saved) : DEFAULT_GYM_SETTINGS;
   });
 
   const [trainers, setTrainers] = useState(() => {
-    const saved = localStorage.getItem('bf_v1_trainers');
+    const saved = localStorage.getItem('bf_v3_trainers');
     return saved ? JSON.parse(saved) : DEFAULT_TRAINERS;
   });
 
   const [packages, setPackages] = useState(() => {
-    const saved = localStorage.getItem('bf_v1_packages');
+    const saved = localStorage.getItem('bf_v3_packages');
     return saved ? JSON.parse(saved) : DEFAULT_PACKAGES;
   });
 
   const [timetable, setTimetable] = useState(() => {
-    const saved = localStorage.getItem('bf_v1_timetable');
+    const saved = localStorage.getItem('bf_v3_timetable');
     return saved ? JSON.parse(saved) : DEFAULT_CLASSES;
   });
 
   // User State: Default simulated user is "Guest"
   const [currentUser, setCurrentUser] = useState(() => {
-    const saved = localStorage.getItem('bf_v1_current_user');
+    const saved = localStorage.getItem('bf_v3_current_user');
     return saved ? JSON.parse(saved) : { email: null, role: 'guest', name: 'Guest' };
   });
 
   // Mock Members list (Database)
   const [members, setMembers] = useState(() => {
-    const saved = localStorage.getItem('bf_v1_members');
+    const saved = localStorage.getItem('bf_v3_members');
     if (saved) return JSON.parse(saved);
     
     // Seed with default profiles
@@ -274,7 +274,7 @@ export const GymProvider = ({ children }) => {
 
   // PT bookings database
   const [ptBookings, setPtBookings] = useState(() => {
-    const saved = localStorage.getItem('bf_v1_pt_bookings');
+    const saved = localStorage.getItem('bf_v3_pt_bookings');
     return saved ? JSON.parse(saved) : [
       { id: 'ptb1', memberEmail: 'vip@gmail.com', memberName: 'Rachel Chen', trainerId: 't3', trainerName: 'Coach Sarah Wong', day: 'Monday', time: '11:00 AM' },
       { id: 'ptb2', memberEmail: 'member@gmail.com', memberName: 'Darren Teo', trainerId: 't2', trainerName: 'Coach Marcus Lim', day: 'Wednesday', time: '05:00 PM' }
@@ -283,13 +283,19 @@ export const GymProvider = ({ children }) => {
 
   // Trainer Availability Blocks state
   const [trainerBlocks, setTrainerBlocks] = useState(() => {
-    const saved = localStorage.getItem('bf_v1_trainer_blocks');
+    const saved = localStorage.getItem('bf_v3_trainer_blocks');
+    return saved ? JSON.parse(saved) : [];
+  });
+
+  // Guest Trial Class Bookings state
+  const [trialBookings, setTrialBookings] = useState(() => {
+    const saved = localStorage.getItem('bf_v3_trial_bookings');
     return saved ? JSON.parse(saved) : [];
   });
 
   // Synchronize state with LocalStorage and update theme
   useEffect(() => {
-    localStorage.setItem('bf_v1_settings', JSON.stringify(gymSettings));
+    localStorage.setItem('bf_v3_settings', JSON.stringify(gymSettings));
     
     // Dynamically update CSS custom properties for accent styling
     const activeTheme = THEMES[gymSettings.theme] || THEMES.red;
@@ -299,32 +305,36 @@ export const GymProvider = ({ children }) => {
   }, [gymSettings]);
 
   useEffect(() => {
-    localStorage.setItem('bf_v1_trainers', JSON.stringify(trainers));
+    localStorage.setItem('bf_v3_trainers', JSON.stringify(trainers));
   }, [trainers]);
 
   useEffect(() => {
-    localStorage.setItem('bf_v1_packages', JSON.stringify(packages));
+    localStorage.setItem('bf_v3_packages', JSON.stringify(packages));
   }, [packages]);
 
   useEffect(() => {
-    localStorage.setItem('bf_v1_timetable', JSON.stringify(timetable));
+    localStorage.setItem('bf_v3_timetable', JSON.stringify(timetable));
   }, [timetable]);
 
   useEffect(() => {
-    localStorage.setItem('bf_v1_current_user', JSON.stringify(currentUser));
+    localStorage.setItem('bf_v3_current_user', JSON.stringify(currentUser));
   }, [currentUser]);
 
   useEffect(() => {
-    localStorage.setItem('bf_v1_members', JSON.stringify(members));
+    localStorage.setItem('bf_v3_members', JSON.stringify(members));
   }, [members]);
 
   useEffect(() => {
-    localStorage.setItem('bf_v1_pt_bookings', JSON.stringify(ptBookings));
+    localStorage.setItem('bf_v3_pt_bookings', JSON.stringify(ptBookings));
   }, [ptBookings]);
 
   useEffect(() => {
-    localStorage.setItem('bf_v1_trainer_blocks', JSON.stringify(trainerBlocks));
+    localStorage.setItem('bf_v3_trainer_blocks', JSON.stringify(trainerBlocks));
   }, [trainerBlocks]);
+
+  useEffect(() => {
+    localStorage.setItem('bf_v3_trial_bookings', JSON.stringify(trialBookings));
+  }, [trialBookings]);
 
   // Auth Operations (Simulated)
   const login = (email, role) => {
@@ -632,16 +642,49 @@ export const GymProvider = ({ children }) => {
     ));
   };
 
+  // Book a free trial class for guest user
+  const bookTrialClass = (classId, guestInfo) => {
+    const targetClass = timetable.find(c => c.id === classId);
+    if (!targetClass) return false;
+
+    // Check if email already booked this class in trialBookings
+    const alreadyBooked = trialBookings.some(
+      b => b.classId === classId && b.email.toLowerCase() === guestInfo.email.toLowerCase()
+    );
+    if (alreadyBooked) {
+      alert('You have already requested a free trial for this class!');
+      return false;
+    }
+
+    const newTrialBooking = {
+      id: 'trial_' + Date.now(),
+      classId,
+      className: targetClass.name,
+      classTime: targetClass.time,
+      classDay: targetClass.day,
+      classTrainer: targetClass.trainer,
+      name: guestInfo.name,
+      email: guestInfo.email.toLowerCase(),
+      phone: guestInfo.phone,
+      status: 'pending', // pending / confirmed
+      createdAt: new Date().toISOString()
+    };
+
+    setTrialBookings(prev => [...prev, newTrialBooking]);
+    return true;
+  };
+
   // Reset to default settings
   const resetToDefault = () => {
     if (window.confirm('Are you sure you want to reset all configurations to default? This will clear bookings, subscriptions, and customized packages.')) {
-      localStorage.removeItem('bf_v1_settings');
-      localStorage.removeItem('bf_v1_trainers');
-      localStorage.removeItem('bf_v1_packages');
-      localStorage.removeItem('bf_v1_timetable');
-      localStorage.removeItem('bf_v1_members');
-      localStorage.removeItem('bf_v1_pt_bookings');
-      localStorage.removeItem('bf_v1_trainer_blocks');
+      localStorage.removeItem('bf_v3_settings');
+      localStorage.removeItem('bf_v3_trainers');
+      localStorage.removeItem('bf_v3_packages');
+      localStorage.removeItem('bf_v3_timetable');
+      localStorage.removeItem('bf_v3_members');
+      localStorage.removeItem('bf_v3_pt_bookings');
+      localStorage.removeItem('bf_v3_trainer_blocks');
+      localStorage.removeItem('bf_v3_trial_bookings');
       
       setGymSettings(DEFAULT_GYM_SETTINGS);
       setTrainers(DEFAULT_TRAINERS);
@@ -743,6 +786,9 @@ export const GymProvider = ({ children }) => {
       setPtBookings,
       trainerBlocks,
       setTrainerBlocks,
+      trialBookings,
+      setTrialBookings,
+      bookTrialClass,
       login,
       logout,
       subscribeToPackage,

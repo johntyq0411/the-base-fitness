@@ -2,9 +2,11 @@ import React, { useState, useContext } from 'react';
 import { GymContext } from '../context/GymContext';
 
 export default function Classes({ setActiveSection, isHomepage }) {
-  const { timetable, bookClass, currentUser } = useContext(GymContext);
+  const { timetable, bookClass, currentUser, bookTrialClass } = useContext(GymContext);
   const [selectedDay, setSelectedDay] = useState('Monday');
   const [searchQuery, setSearchQuery] = useState('');
+  const [selectedClassForTrial, setSelectedClassForTrial] = useState(null);
+  const [trialForm, setTrialForm] = useState({ name: '', email: '', phone: '' });
 
   const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
 
@@ -17,8 +19,8 @@ export default function Classes({ setActiveSection, isHomepage }) {
 
   const handleBook = (classId) => {
     if (currentUser.role === 'guest') {
-      alert('Please log in as a Member first. You can use the simulator bar at the top of the screen to quickly switch roles!');
-      setActiveSection('portal');
+      const targetClass = timetable.find(c => c.id === classId);
+      setSelectedClassForTrial(targetClass);
       return;
     }
     bookClass(classId);
@@ -165,7 +167,7 @@ export default function Classes({ setActiveSection, isHomepage }) {
                   <h3 className="class-title">{c.name}</h3>
                   
                   <div className="class-meta">
-                    <span>🥋 <strong>Coach:</strong> {c.trainer}</span>
+                    <span>👤 <strong>Coach:</strong> {c.trainer}</span>
                     <span>📍 <strong>Location:</strong> {c.room}</span>
                   </div>
 
@@ -220,9 +222,11 @@ export default function Classes({ setActiveSection, isHomepage }) {
                       className={`btn ${isEnrolled ? 'btn-secondary' : 'btn-primary'}`}
                       style={{ marginTop: 'auto', width: '100%' }}
                       onClick={() => handleBook(c.id)}
-                      disabled={spotsLeft <= 0 && !isEnrolled}
+                      disabled={spotsLeft <= 0 && !isEnrolled && currentUser.role !== 'guest'}
                     >
-                      {isEnrolled ? (
+                      {currentUser.role === 'guest' ? (
+                        'Book Trial Class'
+                      ) : isEnrolled ? (
                         <>
                           <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" d="m4.5 12.75 6 6 9-13.5" />
@@ -250,6 +254,79 @@ export default function Classes({ setActiveSection, isHomepage }) {
         )}
 
       </div>
+
+      {/* Trial Booking Modal for Guests */}
+      {selectedClassForTrial && (
+        <div className="modal-overlay" onClick={() => setSelectedClassForTrial(null)}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+            <h3 className="modal-title" style={{ fontFamily: 'var(--font-display)', fontSize: '1.4rem' }}>
+              Book Free Trial: <span className="text-glow">{selectedClassForTrial.name}</span>
+            </h3>
+            <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: '1.5rem' }}>
+              Selected Slot: <strong>{selectedClassForTrial.day} at {selectedClassForTrial.time}</strong> with {selectedClassForTrial.trainer}
+            </p>
+
+            <form onSubmit={(e) => {
+              e.preventDefault();
+              const success = bookTrialClass(selectedClassForTrial.id, trialForm);
+              if (success) {
+                alert(`Successfully requested trial for ${selectedClassForTrial.name}! Our team will contact you shortly at ${trialForm.phone} or ${trialForm.email} to confirm your session.`);
+                setSelectedClassForTrial(null);
+                setTrialForm({ name: '', email: '', phone: '' });
+              }
+            }}>
+              <div className="form-group">
+                <label>Your Full Name</label>
+                <input 
+                  type="text" 
+                  className="form-control" 
+                  placeholder="e.g. John Doe"
+                  value={trialForm.name}
+                  onChange={(e) => setTrialForm({ ...trialForm, name: e.target.value })}
+                  required
+                />
+              </div>
+
+              <div className="form-group">
+                <label>Email Address</label>
+                <input 
+                  type="email" 
+                  className="form-control" 
+                  placeholder="e.g. john@example.com"
+                  value={trialForm.email}
+                  onChange={(e) => setTrialForm({ ...trialForm, email: e.target.value })}
+                  required
+                />
+              </div>
+
+              <div className="form-group">
+                <label>Phone Number (Mobile)</label>
+                <input 
+                  type="tel" 
+                  className="form-control" 
+                  placeholder="e.g. +60 12-345 6789"
+                  value={trialForm.phone}
+                  onChange={(e) => setTrialForm({ ...trialForm, phone: e.target.value })}
+                  required
+                />
+              </div>
+
+              <div style={{ backgroundColor: 'rgba(255,255,255,0.02)', padding: '1rem', borderRadius: '0.75rem', fontSize: '0.85rem', color: 'var(--text-secondary)', border: '1px solid var(--border-color)', margin: '1rem 0' }}>
+                📝 <strong>Trial Policy:</strong> Free trial is valid for first-time visitors only. Standard gym rules and attire guidelines apply.
+              </div>
+
+              <div className="modal-actions">
+                <button type="button" className="btn btn-secondary" onClick={() => setSelectedClassForTrial(null)}>
+                  Cancel
+                </button>
+                <button type="submit" className="btn btn-primary">
+                  Submit Trial Request
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </section>
   );
 }
