@@ -197,7 +197,7 @@ export default function Navbar({ activeSection, setActiveSection }) {
           </a>
         </nav>
       ) : (
-        <nav className="mobile-nav">
+        <nav className="mobile-nav" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)' }}>
           <a 
             href="#home" 
             className={`mobile-nav-item ${activeSection === 'home' ? 'active' : ''}`}
