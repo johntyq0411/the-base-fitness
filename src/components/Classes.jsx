@@ -29,19 +29,19 @@ export default function Classes({ setActiveSection, isHomepage }) {
   if (isHomepage) {
     const featuredClasses = [
       {
-        name: 'Functional Strength & Recomposition',
+        name: 'Competition Physique & Body Recomp',
         coach: 'Coach Alex Tan',
-        level: 'All Experience Levels',
-        desc: 'Build functional strength, master movement mechanics, and optimize body composition under personalized instruction.',
-        tag: 'Strength & Machine',
-        icon: '💪'
+        level: 'Beginner to Stage Athlete',
+        desc: 'Build stage-ready muscle, master posing mechanics, and optimize body composition under certified contest-prep coaching.',
+        tag: 'Physique & Stage',
+        icon: '🏆'
       },
       {
-        name: 'Strength & Powerlifting Elite',
+        name: 'Powerlifting & Competition Strength',
         coach: 'Coach Marcus Lim',
-        level: 'Beginner to Competitive Athlete',
-        desc: 'Master compound movement patterns (Squats, Bench, Deadlifts) and correct postures to build core physical power.',
-        tag: 'Strength & Iron',
+        level: 'Beginner to Peaking Athlete',
+        desc: 'Master competitive compound lifting (Squats, Bench, Deadlifts) and peaking protocols designed to set personal records.',
+        tag: 'Contest Peaking',
         icon: '🏋️'
       },
       {
@@ -53,11 +53,11 @@ export default function Classes({ setActiveSection, isHomepage }) {
         icon: '⚡'
       },
       {
-        name: 'Vinyasa Flow Yoga',
+        name: 'Athlete Mobility & Yoga Flow',
         coach: 'Coach Sarah Wong',
-        level: 'Stretching & Recovery focus',
-        desc: 'Restorative posture stretches and core muscle activation flows designed to increase joint mobility and accelerate recovery.',
-        tag: 'Mind & Body Flow',
+        level: 'Recovery & Flexibility Focus',
+        desc: 'Deep stretching flows and joint decompression designed to accelerate muscle recovery and improve performance ranges.',
+        tag: 'Recovery & Flow',
         icon: '🧘'
       }
     ];
