@@ -2,29 +2,97 @@ import React, { useState, useContext } from 'react';
 import { GymContext } from '../context/GymContext';
 
 export default function Classes({ setActiveSection, isHomepage }) {
-  const { timetable, bookClass, currentUser, bookTrialClass } = useContext(GymContext);
+  const { timetable, bookClass, cancelClassBooking, currentUser, bookTrialClass } = useContext(GymContext);
   const [selectedDay, setSelectedDay] = useState('Monday');
   const [searchQuery, setSearchQuery] = useState('');
-  const [selectedClassForTrial, setSelectedClassForTrial] = useState(null);
+  
+  // New filters and views states
+  const [viewMode, setViewMode] = useState('calendar'); // 'calendar' or 'daily'
+  const [selectedClassId, setSelectedClassId] = useState(null); // ID of class in detail modal
+  const [trainerFilter, setTrainerFilter] = useState('');
+  const [roomFilter, setRoomFilter] = useState('');
+  const [showOnlyBooked, setShowOnlyBooked] = useState(false);
+  
   const [trialForm, setTrialForm] = useState({ name: '', email: '', phone: '' });
 
   const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
 
-  // Filter timetable by day and search query (matches name or trainer)
-  const filteredClasses = timetable.filter(c => 
-    c.day === selectedDay &&
-    (c.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
-     c.trainer.toLowerCase().includes(searchQuery.toLowerCase()))
-  );
+  // Dynamically map class descriptions for richer UI
+  const getClassDescription = (name) => {
+    const defaultDesc = "Join our specialized group training session to challenge your limits, improve form mechanics, and build consistent habits under professional coaching.";
+    const mappings = {
+      'Functional Machine Training': 'Optimize your mechanical leverage and strength using specialized machines. Ideal for safe muscle building and movement patterns.',
+      'HIIT Circuit': 'High-Intensity Interval Training circuit designed to maximize cardiovascular capacity and ignite metabolism through dynamic station rotations.',
+      'Powerlifting & Competition Prep': 'Focus on competitive compound lifting: Squat, Bench Press, and Deadlift. Learn proper competition setup, rules, and peaking cycles.',
+      'Athlete Body Recomp Clinic': 'Learn scientific body composition tracking, nutrition timing, and structural training protocols to build muscle and drop fat simultaneously.',
+      'Vinyasa Flow Yoga': 'Connect breath with movement in a continuous flowing sequence. Improves athletic range of motion, flexibility, and mind-muscle recovery.',
+      'HIIT Cardio Combat': 'An intense martial arts-inspired cardio training session combining kicks, punches, and explosive bodyweight intervals.',
+      'Upper Body Blast': 'Targeted hypertrophy and strength session focusing on the chest, back, shoulders, and arms to build structural balance.',
+      'Zumba & Aerobics': 'High energy dance fitness workout combining Latin and international music rhythms. Fun, active cardio training for everyone.',
+      'Advanced Athlete Competition Prep': 'Elite level contest prep class targeting posing symmetry, stage presence, mental peaking, and advanced loading/depletion protocols.',
+      'Functional Core Strength': 'Develop dynamic core stability, trunk rigidity, and rotational athletic power. Essential support for heavy compound movements.',
+      'Core & Machine Circuit': 'A hybrid circuit focusing on core endurance and machine isolation to finish your training week with high metabolic stimulus.',
+      'Weekend Yoga Flow': 'Decompress and reset after a taxing training week with mobility flows, myofascial releases, and restorative breathing exercises.',
+      'Competition Posing & Athlete Conditioning': 'Master specific federation posing criteria, endurance holds, and athletic recovery routines to maximize your stage impact.',
+      'Athlete Peak Performance Prep': 'Sunday peak session optimizing joint health, neuromuscular activation, and overall performance readiness for the week ahead.'
+    };
+    return mappings[name] || defaultDesc;
+  };
+
+  // Helper to parse time strings like "08:00 AM - 09:30 AM" into sortable minutes from midnight
+  const parseTimeToMinutes = (timeStr) => {
+    try {
+      const startPart = timeStr.split('-')[0].trim();
+      const [time, modifier] = startPart.split(' ');
+      let [hours, minutes] = time.split(':').map(Number);
+      if (modifier === 'PM' && hours < 12) hours += 12;
+      if (modifier === 'AM' && hours === 12) hours = 0;
+      return hours * 60 + minutes;
+    } catch (e) {
+      return 0;
+    }
+  };
+
+  // Determine current day of week to highlight column
+  const getTodayDayName = () => {
+    const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+    const todayIndex = new Date().getDay();
+    return dayNames[todayIndex];
+  };
+  const todayDayName = getTodayDayName();
+
+  // Extract unique values dynamically from timetable for filters
+  const uniqueTrainers = [...new Set(timetable.map(c => c.trainer))].sort();
+  const uniqueRooms = [...new Set(timetable.map(c => c.room))].sort();
+
+  // Filter timetable classes globally
+  const filteredClasses = timetable.filter(c => {
+    const matchesSearch = 
+      c.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      c.trainer.toLowerCase().includes(searchQuery.toLowerCase());
+    
+    const matchesTrainer = !trainerFilter || c.trainer === trainerFilter;
+    const matchesRoom = !roomFilter || c.room === roomFilter;
+    const matchesBooked = !showOnlyBooked || (currentUser.role === 'member' && c.enrolled.includes(currentUser.email));
+
+    return matchesSearch && matchesTrainer && matchesRoom && matchesBooked;
+  });
+
+  // Handle class booking / trial booking modal trigger
+  const handleCardClick = (classObj) => {
+    setSelectedClassId(classObj.id);
+  };
 
   const handleBook = (classId) => {
     if (currentUser.role === 'guest') {
-      const targetClass = timetable.find(c => c.id === classId);
-      setSelectedClassForTrial(targetClass);
+      // Keep selected class open but guest modal gets processed inside
       return;
     }
     bookClass(classId);
   };
+
+  // Find currently open class detail safely from the fresh state
+  const activeClass = selectedClassId ? timetable.find(c => c.id === selectedClassId) : null;
 
   if (isHomepage) {
     const featuredClasses = [
@@ -112,218 +180,488 @@ export default function Classes({ setActiveSection, isHomepage }) {
     <section className="section" id="classes" style={{ backgroundColor: 'rgba(255, 255, 255, 0.01)' }}>
       <div className="container">
         
+        {/* Timetable Title */}
         <div className="timetable-header">
           <div>
             <span style={{ color: 'var(--primary-color)', fontWeight: '700', textTransform: 'uppercase', fontSize: '0.85rem', letterSpacing: '1.5px', display: 'block', marginBottom: '0.5rem' }}>
-              Weekly Timetable
+              Gym Class Scheduler
             </span>
             <h2>Group Fitness Classes</h2>
           </div>
-          
-          <div style={{ position: 'relative', maxWidth: '300px', width: '100%' }}>
-            <input 
-              type="text" 
-              placeholder="Search class or coach..." 
-              className="form-control"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              style={{ paddingLeft: '2.5rem' }}
-            />
-            <svg 
-              style={{ position: 'absolute', left: '12px', top: '15px', color: 'var(--text-secondary)' }} 
-              width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24"
+        </div>
+
+        {/* Timetable Search & Filter Controls */}
+        <div className="timetable-controls">
+          <div className="timetable-filters">
+            {/* Search Input */}
+            <div style={{ position: 'relative', minWidth: '220px', flex: 1 }}>
+              <input 
+                type="text" 
+                placeholder="Search class or coach..." 
+                className="form-control"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                style={{ paddingLeft: '2.5rem', margin: 0, height: '42px', fontSize: '0.85rem' }}
+              />
+              <svg 
+                style={{ position: 'absolute', left: '12px', top: '13px', color: 'var(--text-secondary)' }} 
+                width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24"
+              >
+                <circle cx="11" cy="11" r="8" />
+                <path d="m21 21-4.3-4.3" />
+              </svg>
+            </div>
+
+            {/* Coach Filter */}
+            <select 
+              className="filter-select"
+              value={trainerFilter}
+              onChange={(e) => setTrainerFilter(e.target.value)}
+              style={{ height: '42px' }}
             >
-              <circle cx="11" cy="11" r="8" />
-              <path d="m21 21-4.3-4.3" />
-            </svg>
+              <option value="">All Coaches</option>
+              {uniqueTrainers.map(t => (
+                <option key={t} value={t}>{t}</option>
+              ))}
+            </select>
+
+            {/* Room Filter */}
+            <select 
+              className="filter-select"
+              value={roomFilter}
+              onChange={(e) => setRoomFilter(e.target.value)}
+              style={{ height: '42px' }}
+            >
+              <option value="">All Rooms</option>
+              {uniqueRooms.map(r => (
+                <option key={r} value={r}>{r}</option>
+              ))}
+            </select>
+
+            {/* My Bookings Checkbox (Member Only) */}
+            {currentUser.role === 'member' && (
+              <label className={`filter-checkbox-label ${showOnlyBooked ? 'active' : ''}`} style={{ height: '42px' }}>
+                <input 
+                  type="checkbox"
+                  checked={showOnlyBooked}
+                  onChange={(e) => setShowOnlyBooked(e.target.checked)}
+                />
+                <span>My Bookings Only</span>
+              </label>
+            )}
+          </div>
+
+          {/* View Toggler (Calendar vs Daily list) */}
+          <div className="view-toggle">
+            <button 
+              className={`view-toggle-btn ${viewMode === 'calendar' ? 'active' : ''}`}
+              onClick={() => setViewMode('calendar')}
+            >
+              <svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                <rect x="3" y="4" width="18" height="16" rx="2" />
+                <path d="M16 2v4M8 2v4M3 10h18" />
+              </svg>
+              Weekly Calendar
+            </button>
+            <button 
+              className={`view-toggle-btn ${viewMode === 'daily' ? 'active' : ''}`}
+              onClick={() => setViewMode('daily')}
+            >
+              <svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
+              </svg>
+              Daily Schedule
+            </button>
           </div>
         </div>
 
-        {/* Day Tabs */}
-        <div className="day-tabs">
-          {days.map(day => (
-            <button 
-              key={day}
-              className={`day-tab ${selectedDay === day ? 'active' : ''}`}
-              onClick={() => setSelectedDay(day)}
-            >
-              <span className="day-full">{day}</span>
-              <span className="day-short">{day.substring(0, 3)}</span>
-            </button>
-          ))}
-        </div>
+        {/* --- WEEKLY CALENDAR GRID VIEW --- */}
+        {viewMode === 'calendar' && (
+          <div className="calendar-container">
+            <div className="calendar-grid">
+              {days.map(day => {
+                const dayClasses = filteredClasses.filter(c => c.day === day);
+                const sortedDayClasses = [...dayClasses].sort((a, b) => parseTimeToMinutes(a.time) - parseTimeToMinutes(b.time));
+                const isToday = day === todayDayName;
 
-        {/* Classes List */}
-        {filteredClasses.length > 0 ? (
-          <div className="class-grid" style={{ marginTop: '2rem' }}>
-            {filteredClasses.map(c => {
-              const spotsLeft = c.capacity - c.enrolled.length;
-              const percentFull = (c.enrolled.length / c.capacity) * 100;
-              const isEnrolled = currentUser.role === 'member' && c.enrolled.includes(currentUser.email);
-
-              return (
-                <div key={c.id} className="class-card">
-                  <div className="class-time">{c.time}</div>
-                  <h3 className="class-title">{c.name}</h3>
-                  
-                  <div className="class-meta">
-                    <span>👤 <strong>Coach:</strong> {c.trainer}</span>
-                    <span>📍 <strong>Location:</strong> {c.room}</span>
-                  </div>
-
-                  {/* Enrollment Progress Bar */}
-                  <div style={{ margin: '1rem 0 0.5rem 0' }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.75rem', marginBottom: '0.3rem', fontWeight: '500' }}>
-                      <span style={{ color: 'var(--text-secondary)' }}>Capacity Booking</span>
-                      <span>{c.enrolled.length} / {c.capacity} Slots</span>
+                return (
+                  <div key={day} className={`calendar-column ${isToday ? 'is-today' : ''}`}>
+                    <div className="calendar-column-header">
+                      <span className="calendar-day-name">{day}</span>
+                      <span className="calendar-day-label">{isToday ? 'Today' : 'Gym Slot'}</span>
                     </div>
-                    <div style={{ width: '100%', height: '6px', backgroundColor: '#1f2937', borderRadius: '3px', overflow: 'hidden' }}>
-                      <div 
-                        style={{ 
-                          width: `${percentFull}%`, 
-                          height: '100%', 
-                          backgroundColor: percentFull >= 100 ? '#ef4444' : 'var(--primary-color)',
-                          boxShadow: percentFull < 100 ? '0 0 8px var(--primary-color)' : 'none',
-                          transition: 'width 0.4s ease'
-                        }}
-                      ></div>
-                    </div>
-                  </div>
 
-                  <div className="class-spots">
-                    {spotsLeft <= 0 ? (
-                      <span className="spots-left">⚠️ Full Capacity</span>
-                    ) : spotsLeft <= 3 ? (
-                      <span className="spots-left">🔥 Only {spotsLeft} slots left!</span>
+                    {sortedDayClasses.length > 0 ? (
+                      sortedDayClasses.map(c => {
+                        const spotsLeft = c.capacity - c.enrolled.length;
+                        const isEnrolled = currentUser.role === 'member' && c.enrolled.includes(currentUser.email);
+                        
+                        return (
+                          <div 
+                            key={c.id} 
+                            className={`calendar-class-card ${isEnrolled ? 'booked' : ''}`}
+                            onClick={() => handleCardClick(c)}
+                          >
+                            <div className="calendar-card-time">
+                              <svg width="12" height="12" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
+                                <circle cx="12" cy="12" r="9" />
+                                <path d="M12 6v6l4 2" />
+                              </svg>
+                              <span>{c.time.split(' - ')[0]}</span>
+                            </div>
+                            <div className="calendar-card-title">{c.name}</div>
+                            <div className="calendar-card-meta">
+                              <span>👤 {c.trainer.split(' ').slice(-1)[0]}</span>
+                              <span>📍 {c.room}</span>
+                            </div>
+                            <div className="calendar-card-spots">
+                              {isEnrolled ? (
+                                <span className="booked-badge">Booked</span>
+                              ) : spotsLeft <= 0 ? (
+                                <span className="spots-badge full">Full</span>
+                              ) : spotsLeft <= 3 ? (
+                                <span className="spots-badge low">{spotsLeft} left</span>
+                              ) : (
+                                <span className="spots-badge ok">{spotsLeft} slots</span>
+                              )}
+                            </div>
+                          </div>
+                        );
+                      })
                     ) : (
-                      <span className="spots-ok">✅ {spotsLeft} slots available</span>
+                      <div style={{ textAlign: 'center', padding: '2rem 0', color: 'var(--text-secondary)', fontSize: '0.75rem', fontStyle: 'italic' }}>
+                        No sessions
+                      </div>
                     )}
                   </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
 
-                  {/* Contextual Action Buttons */}
-                  {currentUser.role === 'admin' || currentUser.role === 'trainer' ? (
-                    <div style={{ marginTop: 'auto', paddingTop: '1rem', borderTop: '1px solid var(--border-color)', fontSize: '0.8rem' }}>
-                      <strong style={{ color: 'white', display: 'block', marginBottom: '0.3rem' }}>Enrolled Members:</strong>
-                      {c.enrolled.length > 0 ? (
-                        <ul style={{ listStyle: 'none', paddingLeft: 0, color: 'var(--text-secondary)' }}>
-                          {c.enrolled.map((email, idx) => (
-                            <li key={idx} style={{ display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
-                              <span style={{ width: '4px', height: '4px', backgroundColor: 'var(--primary-color)', borderRadius: '50%' }}></span>
-                              {email}
-                            </li>
-                          ))}
-                        </ul>
-                      ) : (
-                        <span style={{ color: 'var(--text-secondary)', fontStyle: 'italic' }}>No members booked yet</span>
-                      )}
-                    </div>
-                  ) : (
-                    <button
-                      className={`btn ${isEnrolled ? 'btn-secondary' : 'btn-primary'}`}
-                      style={{ marginTop: 'auto', width: '100%' }}
-                      onClick={() => handleBook(c.id)}
-                      disabled={spotsLeft <= 0 && !isEnrolled && currentUser.role !== 'guest'}
-                    >
-                      {currentUser.role === 'guest' ? (
-                        'Book Trial Class'
-                      ) : isEnrolled ? (
-                        <>
-                          <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" d="m4.5 12.75 6 6 9-13.5" />
-                          </svg>
-                          Booked
-                        </>
-                      ) : spotsLeft <= 0 ? (
-                        'Class Full'
-                      ) : (
-                        'Book Session'
-                      )}
-                    </button>
-                  )}
-                </div>
-              );
-            })}
-          </div>
-        ) : (
-          <div style={{ textAlign: 'center', padding: '4rem 0', color: 'var(--text-secondary)' }}>
-            <svg width="48" height="48" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24" style={{ marginBottom: '1rem', opacity: '0.5' }}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 0 1 2.25-2.25h13.5A2.25 2.25 0 0 1 21 7.5v11.25m-18 0A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75m-18 0v-7.5A2.25 2.25 0 0 1 5.25 9h13.5A2.25 2.25 0 0 1 21 11.25v7.5" />
-            </svg>
-            <p>No group fitness classes scheduled for {selectedDay}.</p>
-          </div>
+        {/* --- DAILY LIST VIEW --- */}
+        {viewMode === 'daily' && (
+          <>
+            {/* Day Selection Tabs */}
+            <div className="day-tabs">
+              {days.map(day => {
+                const dayClassesCount = filteredClasses.filter(c => c.day === day).length;
+                return (
+                  <button 
+                    key={day}
+                    className={`day-tab ${selectedDay === day ? 'active' : ''}`}
+                    onClick={() => setSelectedDay(day)}
+                  >
+                    <span className="day-full">{day} ({dayClassesCount})</span>
+                    <span className="day-short">{day.substring(0, 3)} ({dayClassesCount})</span>
+                  </button>
+                );
+              })}
+            </div>
+
+            {/* Classes list for selected day */}
+            {filteredClasses.filter(c => c.day === selectedDay).length > 0 ? (
+              <div className="class-grid" style={{ marginTop: '2rem' }}>
+                {filteredClasses
+                  .filter(c => c.day === selectedDay)
+                  .sort((a, b) => parseTimeToMinutes(a.time) - parseTimeToMinutes(b.time))
+                  .map(c => {
+                    const spotsLeft = c.capacity - c.enrolled.length;
+                    const percentFull = (c.enrolled.length / c.capacity) * 100;
+                    const isEnrolled = currentUser.role === 'member' && c.enrolled.includes(currentUser.email);
+
+                    return (
+                      <div 
+                        key={c.id} 
+                        className={`class-card ${isEnrolled ? 'booked' : ''}`}
+                        onClick={() => handleCardClick(c)}
+                      >
+                        <div className="class-time">{c.time}</div>
+                        <h3 className="class-title">{c.name}</h3>
+                        
+                        <div className="class-meta">
+                          <span>👤 <strong>Coach:</strong> {c.trainer}</span>
+                          <span>📍 <strong>Location:</strong> {c.room}</span>
+                        </div>
+
+                        {/* Enrollment Progress Bar */}
+                        <div style={{ margin: '1rem 0 0.5rem 0' }}>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.75rem', marginBottom: '0.3rem', fontWeight: '500' }}>
+                            <span style={{ color: 'var(--text-secondary)' }}>Capacity Booking</span>
+                            <span>{c.enrolled.length} / {c.capacity} Slots</span>
+                          </div>
+                          <div style={{ width: '100%', height: '6px', backgroundColor: '#1f2937', borderRadius: '3px', overflow: 'hidden' }}>
+                            <div 
+                              style={{ 
+                                width: `${percentFull}%`, 
+                                height: '100%', 
+                                backgroundColor: percentFull >= 100 ? '#ef4444' : 'var(--primary-color)',
+                                boxShadow: percentFull < 100 ? '0 0 8px var(--primary-color)' : 'none',
+                                transition: 'width 0.4s ease'
+                              }}
+                            ></div>
+                          </div>
+                        </div>
+
+                        <div className="class-spots">
+                          {isEnrolled ? (
+                            <span className="spots-ok" style={{ display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
+                              <svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth="3" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" d="m4.5 12.75 6 6 9-13.5" />
+                              </svg>
+                              Booked
+                            </span>
+                          ) : spotsLeft <= 0 ? (
+                            <span className="spots-left">⚠️ Full Capacity</span>
+                          ) : spotsLeft <= 3 ? (
+                            <span className="spots-left">🔥 Only {spotsLeft} slots left!</span>
+                          ) : (
+                            <span className="spots-ok">✅ {spotsLeft} slots available</span>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
+              </div>
+            ) : (
+              <div style={{ textAlign: 'center', padding: '4rem 0', color: 'var(--text-secondary)' }}>
+                <svg width="48" height="48" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24" style={{ marginBottom: '1rem', opacity: '0.5' }}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 0 1 2.25-2.25h13.5A2.25 2.25 0 0 1 21 7.5v11.25m-18 0A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75m-18 0v-7.5A2.25 2.25 0 0 1 5.25 9h13.5A2.25 2.25 0 0 1 21 11.25v7.5" />
+                </svg>
+                <p>No group fitness classes match your filters for {selectedDay}.</p>
+              </div>
+            )}
+          </>
         )}
 
       </div>
 
-      {/* Trial Booking Modal for Guests */}
-      {selectedClassForTrial && (
-        <div className="modal-overlay" onClick={() => setSelectedClassForTrial(null)}>
-          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-            <h3 className="modal-title" style={{ fontFamily: 'var(--font-display)', fontSize: '1.4rem' }}>
-              Book Free Trial: <span className="text-glow">{selectedClassForTrial.name}</span>
-            </h3>
-            <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: '1.5rem' }}>
-              Selected Slot: <strong>{selectedClassForTrial.day} at {selectedClassForTrial.time}</strong> with {selectedClassForTrial.trainer}
-            </p>
+      {/* --- CLASS DETAIL MODAL OVERLAY --- */}
+      {activeClass && (
+        <div className="class-modal-overlay" onClick={() => setSelectedClassId(null)}>
+          <div className="class-modal-content" onClick={(e) => e.stopPropagation()}>
+            {/* Close Button */}
+            <button className="class-modal-close" onClick={() => setSelectedClassId(null)}>
+              <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18 18 6M6 6l12 12" />
+              </svg>
+            </button>
 
-            <form onSubmit={(e) => {
-              e.preventDefault();
-              const success = bookTrialClass(selectedClassForTrial.id, trialForm);
-              if (success) {
-                alert(`Successfully requested trial for ${selectedClassForTrial.name}! Our team will contact you shortly at ${trialForm.phone} or ${trialForm.email} to confirm your session.`);
-                setSelectedClassForTrial(null);
-                setTrialForm({ name: '', email: '', phone: '' });
-              }
-            }}>
-              <div className="form-group">
-                <label>Your Full Name</label>
-                <input 
-                  type="text" 
-                  className="form-control" 
-                  placeholder="e.g. John Doe"
-                  value={trialForm.name}
-                  onChange={(e) => setTrialForm({ ...trialForm, name: e.target.value })}
-                  required
-                />
+            {/* Time / Day Badge */}
+            <div className="class-modal-time-badge">
+              <svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
+                <circle cx="12" cy="12" r="9" />
+                <path d="M12 6v6l4 2" />
+              </svg>
+              <span>{activeClass.day} | {activeClass.time}</span>
+            </div>
+
+            {/* Class Title */}
+            <h3 className="class-modal-title">{activeClass.name}</h3>
+
+            {/* Class Meta Grid */}
+            <div className="class-modal-meta-grid">
+              <div className="class-modal-meta-item">
+                <span className="class-modal-meta-label">Coach</span>
+                <span className="class-modal-meta-val">👤 {activeClass.trainer}</span>
               </div>
-
-              <div className="form-group">
-                <label>Email Address</label>
-                <input 
-                  type="email" 
-                  className="form-control" 
-                  placeholder="e.g. john@example.com"
-                  value={trialForm.email}
-                  onChange={(e) => setTrialForm({ ...trialForm, email: e.target.value })}
-                  required
-                />
+              <div className="class-modal-meta-item">
+                <span className="class-modal-meta-label">Location Room</span>
+                <span className="class-modal-meta-val">📍 {activeClass.room}</span>
               </div>
+            </div>
 
-              <div className="form-group">
-                <label>Phone Number (Mobile)</label>
-                <input 
-                  type="tel" 
-                  className="form-control" 
-                  placeholder="e.g. +60 12-345 6789"
-                  value={trialForm.phone}
-                  onChange={(e) => setTrialForm({ ...trialForm, phone: e.target.value })}
-                  required
-                />
+            {/* Class Description */}
+            <div className="class-modal-desc">
+              {getClassDescription(activeClass.name)}
+            </div>
+
+            {/* Class Capacity & slots */}
+            <div className="class-modal-capacity">
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.8rem', marginBottom: '0.5rem', fontWeight: '600' }}>
+                <span style={{ color: 'var(--text-secondary)' }}>Capacity Status</span>
+                <span>{activeClass.enrolled.length} / {activeClass.capacity} Booked Slots</span>
               </div>
+              
+              {/* Progress Bar */}
+              {(() => {
+                const percentFull = (activeClass.enrolled.length / activeClass.capacity) * 100;
+                return (
+                  <div style={{ width: '100%', height: '8px', backgroundColor: '#1f2937', borderRadius: '4px', overflow: 'hidden' }}>
+                    <div 
+                      style={{ 
+                        width: `${percentFull}%`, 
+                        height: '100%', 
+                        backgroundColor: percentFull >= 100 ? '#ef4444' : 'var(--primary-color)',
+                        boxShadow: percentFull < 100 ? '0 0 8px var(--primary-color)' : 'none',
+                        transition: 'width 0.4s ease'
+                      }}
+                    ></div>
+                  </div>
+                );
+              })()}
 
-              <div style={{ backgroundColor: 'rgba(255,255,255,0.02)', padding: '1rem', borderRadius: '0.75rem', fontSize: '0.85rem', color: 'var(--text-secondary)', border: '1px solid var(--border-color)', margin: '1rem 0' }}>
-                📝 <strong>Trial Policy:</strong> Free trial is valid for first-time visitors only. Standard gym rules and attire guidelines apply.
+              <div style={{ marginTop: '0.75rem', fontSize: '0.8rem', fontWeight: '500' }}>
+                {(() => {
+                  const spotsLeft = activeClass.capacity - activeClass.enrolled.length;
+                  if (spotsLeft <= 0) return <span style={{ color: '#ef4444' }}>⚠️ Sorry, this class has reached maximum capacity.</span>;
+                  if (spotsLeft <= 3) return <span style={{ color: '#f59e0b' }}>🔥 Low availability! Only {spotsLeft} slots left.</span>;
+                  return <span style={{ color: '#22c55e' }}>✅ Class is open. {spotsLeft} slots currently available.</span>;
+                })()}
               </div>
+            </div>
 
-              <div className="modal-actions">
-                <button type="button" className="btn btn-secondary" onClick={() => setSelectedClassForTrial(null)}>
-                  Cancel
+            {/* Admin/Trainer View: Roster list */}
+            {(currentUser.role === 'admin' || currentUser.role === 'trainer') && (
+              <div style={{ borderTop: '1px solid var(--border-color)', paddingTop: '1.25rem', marginBottom: '1.5rem' }}>
+                <h4 style={{ color: 'white', fontSize: '0.9rem', marginBottom: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                  📋 Enrolled Members List ({activeClass.enrolled.length})
+                </h4>
+                {activeClass.enrolled.length > 0 ? (
+                  <div style={{ maxHeight: '120px', overflowY: 'auto', backgroundColor: 'rgba(0,0,0,0.2)', padding: '0.75rem', borderRadius: '0.75rem', border: '1px solid var(--border-color)' }}>
+                    <ul style={{ listStyle: 'none', paddingLeft: 0, margin: 0, fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
+                      {activeClass.enrolled.map((email, idx) => (
+                        <li key={idx} style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', padding: '0.25rem 0' }}>
+                          <span style={{ width: '4px', height: '4px', backgroundColor: 'var(--primary-color)', borderRadius: '50%' }}></span>
+                          {email}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                ) : (
+                  <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', fontStyle: 'italic' }}>No members booked yet.</p>
+                )}
+              </div>
+            )}
+
+            {/* Trial Booking Form for Guests inside detail modal */}
+            {currentUser.role === 'guest' ? (
+              <div style={{ borderTop: '1px solid var(--border-color)', paddingTop: '1.25rem', marginTop: '1.5rem' }}>
+                <h4 style={{ color: 'white', fontSize: '0.95rem', marginBottom: '1rem' }}>Book Your Free Guest Trial</h4>
+                <form onSubmit={(e) => {
+                  e.preventDefault();
+                  const success = bookTrialClass(activeClass.id, trialForm);
+                  if (success) {
+                    alert(`Successfully requested trial for ${activeClass.name}! Our team will contact you shortly at ${trialForm.phone} or ${trialForm.email} to confirm your session.`);
+                    setSelectedClassId(null);
+                    setTrialForm({ name: '', email: '', phone: '' });
+                  }
+                }}>
+                  <div className="form-group" style={{ marginBottom: '0.75rem' }}>
+                    <label style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', display: 'block', marginBottom: '0.25rem' }}>Your Full Name</label>
+                    <input 
+                      type="text" 
+                      className="form-control" 
+                      placeholder="e.g. John Doe"
+                      value={trialForm.name}
+                      onChange={(e) => setTrialForm({ ...trialForm, name: e.target.value })}
+                      style={{ height: '38px', fontSize: '0.85rem' }}
+                      required
+                    />
+                  </div>
+
+                  <div className="form-group" style={{ marginBottom: '0.75rem' }}>
+                    <label style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', display: 'block', marginBottom: '0.25rem' }}>Email Address</label>
+                    <input 
+                      type="email" 
+                      className="form-control" 
+                      placeholder="e.g. john@example.com"
+                      value={trialForm.email}
+                      onChange={(e) => setTrialForm({ ...trialForm, email: e.target.value })}
+                      style={{ height: '38px', fontSize: '0.85rem' }}
+                      required
+                    />
+                  </div>
+
+                  <div className="form-group" style={{ marginBottom: '1.25rem' }}>
+                    <label style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', display: 'block', marginBottom: '0.25rem' }}>Phone Number (Mobile)</label>
+                    <input 
+                      type="tel" 
+                      className="form-control" 
+                      placeholder="e.g. +60 12-345 6789"
+                      value={trialForm.phone}
+                      onChange={(e) => setTrialForm({ ...trialForm, phone: e.target.value })}
+                      style={{ height: '38px', fontSize: '0.85rem' }}
+                      required
+                    />
+                  </div>
+
+                  <div className="modal-actions" style={{ marginTop: '1rem', display: 'flex', gap: '0.75rem' }}>
+                    <button type="button" className="btn btn-secondary" style={{ flex: 1, height: '42px', padding: 0 }} onClick={() => setSelectedClassId(null)}>
+                      Cancel
+                    </button>
+                    <button type="submit" className="btn btn-primary" style={{ flex: 2, height: '42px', padding: 0 }}>
+                      Submit Trial Request
+                    </button>
+                  </div>
+                </form>
+              </div>
+            ) : (
+              /* Booking / Cancellation Action Buttons for logged-in users */
+              <div className="modal-actions" style={{ display: 'flex', gap: '0.75rem', borderTop: '1px solid var(--border-color)', paddingTop: '1.5rem', marginTop: '0.5rem' }}>
+                <button type="button" className="btn btn-secondary" style={{ flex: 1, padding: '0.75rem 0', borderRadius: '0.75rem' }} onClick={() => setSelectedClassId(null)}>
+                  Close
                 </button>
-                <button type="submit" className="btn btn-primary">
-                  Submit Trial Request
-                </button>
+
+                {currentUser.role === 'member' ? (
+                  (() => {
+                    const isEnrolled = activeClass.enrolled.includes(currentUser.email);
+                    const spotsLeft = activeClass.capacity - activeClass.enrolled.length;
+                    
+                    if (isEnrolled) {
+                      return (
+                        <button 
+                          type="button" 
+                          className="btn btn-secondary" 
+                          style={{ flex: 2, padding: '0.75rem 0', borderRadius: '0.75rem', border: '1px solid #ef4444', color: '#ef4444' }}
+                          onClick={() => {
+                            cancelClassBooking(activeClass.id);
+                          }}
+                        >
+                          Cancel Booking
+                        </button>
+                      );
+                    } else if (spotsLeft <= 0) {
+                      return (
+                        <button 
+                          type="button" 
+                          className="btn btn-secondary" 
+                          style={{ flex: 2, padding: '0.75rem 0', borderRadius: '0.75rem' }} 
+                          disabled
+                        >
+                          Class Full
+                        </button>
+                      );
+                    } else {
+                      return (
+                        <button 
+                          type="button" 
+                          className="btn btn-primary" 
+                          style={{ flex: 2, padding: '0.75rem 0', borderRadius: '0.75rem' }}
+                          onClick={() => {
+                            handleBook(activeClass.id);
+                          }}
+                        >
+                          Book Session
+                        </button>
+                      );
+                    }
+                  })()
+                ) : (
+                  currentUser.role !== 'admin' && currentUser.role !== 'trainer' && (
+                    <button 
+                      type="button" 
+                      className="btn btn-primary" 
+                      style={{ flex: 2, padding: '0.75rem 0', borderRadius: '0.75rem' }}
+                      onClick={() => alert('Please log in as a member to book group classes.')}
+                    >
+                      Sign In to Book
+                    </button>
+                  )
+                )}
               </div>
-            </form>
+            )}
           </div>
         </div>
       )}
