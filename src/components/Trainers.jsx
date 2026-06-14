@@ -76,7 +76,7 @@ export default function Trainers({ setActiveSection }) {
           </span>
           <h2>Expert Personal Trainers</h2>
           <p style={{ color: 'var(--text-secondary)', maxWidth: '600px', margin: '0 auto', fontSize: '1rem' }}>
-            Work 1-on-1 with Kluang's top fitness professionals. Accelerate weight loss, master Muay Thai fight tactics, or scale up your heavy lifts.
+            Work 1-on-1 with Kluang's top fitness professionals. Accelerate weight loss, master functional posture, or scale up your heavy lifts.
           </p>
         </div>
 

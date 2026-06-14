@@ -797,7 +797,7 @@ export default function TrainerDashboard({ setActiveSection }) {
                       className="form-control"
                       value={profSpecs}
                       onChange={(e) => setProfSpecs(e.target.value)}
-                      placeholder="e.g. Muay Thai, Strength Conditioning"
+                      placeholder="e.g. Body Transformation, Strength Conditioning"
                       required
                     />
                   </div>
@@ -822,7 +822,7 @@ export default function TrainerDashboard({ setActiveSection }) {
                       className="form-control"
                       value={profPhoto}
                       onChange={(e) => setProfPhoto(e.target.value)}
-                      placeholder="e.g. muay_thai.png"
+                      placeholder="e.g. coach_alex.png"
                       required
                     />
                   </div>

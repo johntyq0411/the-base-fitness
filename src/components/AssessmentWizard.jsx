@@ -53,9 +53,9 @@ export default function AssessmentWizard({ setActiveSection }) {
     let recommendedCoach = null;
     let coachReason = '';
 
-    if (goal === 'muay_thai') {
+    if (goal === 'functional') {
       recommendedCoach = trainers.find(t => t.id === 't1') || trainers[0]; // Coach Alex Tan
-      coachReason = 'Coach Alex Tan is a former regional Muay Thai champion. Since you want to learn fighting techniques, pad work, and sparring, his expertise makes him the perfect match.';
+      coachReason = 'Coach Alex Tan is our functional fitness and body transformation expert. Since you want to focus on body recomposition, movement posture, and building functional conditioning, his program is the ideal fit.';
     } else if (goal === 'strength' || healthNotes === 'joints') {
       recommendedCoach = trainers.find(t => t.id === 't2') || trainers[1]; // Coach Marcus Lim
       coachReason = 'Coach Marcus Lim is our certified strength conditioning specialist. Since you are focusing on raw strength, powerlifting, or require joint/posture care, Marcus will program safe lifts and hit PRs.';
@@ -68,9 +68,9 @@ export default function AssessmentWizard({ setActiveSection }) {
     let recommendedPkg = null;
     let pkgReason = '';
 
-    if (goal === 'muay_thai' && frequency !== 'low') {
-      recommendedPkg = packages.find(p => p.id === 'p3') || packages[2]; // Fighter Pass
-      pkgReason = 'The Muay Thai & Functional Class Pack (Fighter Pass) gives you unlimited access to bags, pads, sparring classes, and the general gym floor.';
+    if (goal === 'functional' && frequency !== 'low') {
+      recommendedPkg = packages.find(p => p.id === 'p3') || packages[2]; // Premium Strength & Conditioning Pass
+      pkgReason = 'The Premium Strength & Conditioning Pass gives you full access to weights, brand new machines, and all functional group training classes.';
     } else if (experience === 'beginner' && (frequency === 'high' || frequency === 'medium')) {
       recommendedPkg = packages.find(p => p.id === 'p4') || packages[3]; // VIP Elite
       pkgReason = 'As a beginner training 3+ times a week, the VIP Personal Coaching Elite is highly recommended. It includes 8 monthly 1-on-1 sessions with an assigned trainer to lock down your form and prevent injuries.';
@@ -172,13 +172,13 @@ export default function AssessmentWizard({ setActiveSection }) {
             </div>
             
             <div 
-              className={`card ${goal === 'muay_thai' ? 'active' : ''}`} 
-              onClick={() => setGoal('muay_thai')}
-              style={{ padding: '1.25rem', cursor: 'pointer', border: goal === 'muay_thai' ? '1px solid var(--primary-color)' : '1px solid var(--border-color)', backgroundColor: goal === 'muay_thai' ? 'var(--primary-glow)' : 'var(--bg-dark)' }}
+              className={`card ${goal === 'functional' ? 'active' : ''}`} 
+              onClick={() => setGoal('functional')}
+              style={{ padding: '1.25rem', cursor: 'pointer', border: goal === 'functional' ? '1px solid var(--primary-color)' : '1px solid var(--border-color)', backgroundColor: goal === 'functional' ? 'var(--primary-glow)' : 'var(--bg-dark)' }}
             >
-              <strong>🥊 Muay Thai Boxing & Martial Arts</strong>
+              <strong>💪 Functional Fitness & Body Recomposition</strong>
               <span style={{ display: 'block', fontSize: '0.8rem', color: 'var(--text-secondary)', marginTop: '0.25rem' }}>
-                Master combinations, pad work, sparring drills, and tactical combat conditioning.
+                Improve daily functional movements, core strength, body recomposition, and overall mobility.
               </span>
             </div>
           </div>

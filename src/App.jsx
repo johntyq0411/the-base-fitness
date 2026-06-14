@@ -211,6 +211,61 @@ function AppContent() {
               <>
                 <Hero setActiveSection={setActiveSection} />
                 
+                {/* Launch Offer Promo Banner */}
+                <section className="section" style={{ padding: '3rem 0 0 0' }}>
+                  <div className="container">
+                    <div style={{
+                      background: 'linear-gradient(135deg, var(--bg-card) 0%, rgba(220, 38, 38, 0.05) 100%)',
+                      border: '2px dashed var(--primary-color)',
+                      borderRadius: '1.5rem',
+                      padding: '2.5rem 2rem',
+                      textAlign: 'center',
+                      position: 'relative',
+                      overflow: 'hidden',
+                      boxShadow: '0 8px 32px rgba(220, 38, 38, 0.1)'
+                    }}>
+                      {/* Decorative red dot glow */}
+                      <div style={{ position: 'absolute', top: '-20px', right: '-20px', width: '80px', height: '80px', borderRadius: '50%', background: 'var(--primary-color)', filter: 'blur(40px)', opacity: 0.3 }}></div>
+                      
+                      <span className="badge badge-primary" style={{ marginBottom: '1rem', letterSpacing: '1px', textTransform: 'uppercase', fontWeight: '800' }}>
+                        🚨 Limited Launch Offer
+                      </span>
+                      
+                      <h2 style={{ fontSize: '2rem', fontFamily: 'var(--font-display)', color: 'white', marginBottom: '1rem', textTransform: 'uppercase', letterSpacing: '-0.5px' }}>
+                        首 50 位 免会员费!
+                      </h2>
+                      <h3 style={{ fontSize: '1.5rem', fontFamily: 'var(--font-display)', color: 'var(--primary-color)', marginBottom: '1.25rem', fontWeight: '800' }}>
+                        FIRST 50 CUSTOMERS ENJOY FREE MEMBERSHIP!
+                      </h3>
+                      
+                      <p style={{ color: 'var(--text-secondary)', maxWidth: '650px', margin: '0 auto 2rem auto', fontSize: '1.05rem', lineHeight: '1.6' }}>
+                        🔥 <strong>SOMETHING BIG IS COMING TO KLUANG TOWN AREA!</strong><br />
+                        Welcome to <strong>THE BASE FITNESS</strong>—your brand-new premium fitness destination. Be among the first 50 early birds and get your <strong>Registration/Membership Fee 100% WAIVED</strong>. 
+                        First come, first served!
+                      </p>
+                      
+                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '1rem', justifyContent: 'center' }}>
+                        <button 
+                          className="btn btn-primary"
+                          onClick={() => setActiveSection('pricing')}
+                          style={{ padding: '0.8rem 2rem', fontWeight: '800', borderRadius: '0.75rem' }}
+                        >
+                          🎟️ View Membership Deals
+                        </button>
+                        <a 
+                          href="https://www.instagram.com/thebasefitness.kluang/" 
+                          target="_blank" 
+                          rel="noreferrer"
+                          className="btn btn-secondary" 
+                          style={{ padding: '0.8rem 2rem', fontWeight: '700', borderRadius: '0.75rem', display: 'inline-flex', alignItems: 'center', gap: '0.5rem' }}
+                        >
+                          📸 Follow Our Instagram
+                        </a>
+                      </div>
+                    </div>
+                  </div>
+                </section>
+                
                 {/* Fitness Assessment Q&A Wizard */}
                 <section className="section bg-darker" id="assessment-section" style={{ borderBottom: '1px solid var(--border-color)', padding: '4rem 0' }}>
                   <div className="container text-center">

@@ -13,27 +13,26 @@ export default function About() {
             <span style={{ color: 'var(--primary-color)', fontWeight: '700', textTransform: 'uppercase', fontSize: '0.85rem', letterSpacing: '1.5px', display: 'block', marginBottom: '0.5rem' }}>
               Why Choose Us
             </span>
-            <h2>Kluang's Premier Training Hub</h2>
+            <h2>Why Join THE BASE FITNESS?</h2>
             <p style={{ color: 'var(--text-secondary)', marginBottom: '1.5rem' }}>
-              At <strong>{gymSettings.name}</strong>, we believe fitness is not a chore—it's a lifestyle. We offer a high-octane environment designed to motivate and push you. Our specialized Muay Thai Arena, heavy-duty power racks, and specialized recovery support are crafted to meet the needs of absolute beginners and experienced athletes alike.
+              At <strong>{gymSettings.name}</strong>, we provide a modern, high-energy space built to maximize your training success. Rebuild your health, track your progress, and unlock your true physical potential with our premium services.
             </p>
             
-            <div className="about-features" style={{ marginBottom: '2rem' }}>
-              <div className="about-feature-box">
-                <h4>Muay Thai Arena</h4>
-                <p>Authentic training bag station & sparring boxing ring.</p>
+            <div className="about-features" style={{ marginBottom: '2rem', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', fontSize: '1.1rem', color: 'white', fontWeight: '600' }}>
+                <span style={{ color: '#22c55e', fontSize: '1.2rem' }}>✅</span> Brand New Machines
               </div>
-              <div className="about-feature-box">
-                <h4>Powerlifting Zone</h4>
-                <p>Heavy lifting racks, Olympic barbells, and free weights.</p>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', fontSize: '1.1rem', color: 'white', fontWeight: '600' }}>
+                <span style={{ color: '#22c55e', fontSize: '1.2rem' }}>✅</span> Certified Personal Trainer
               </div>
-              <div className="about-feature-box">
-                <h4>Cardio Burn</h4>
-                <p>Equipped with treadmills, spinning cycles, and HIIT rigs.</p>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', fontSize: '1.1rem', color: 'white', fontWeight: '600' }}>
+                <span style={{ color: '#22c55e', fontSize: '1.2rem' }}>✅</span> Anovator Body Composition Analyze
               </div>
-              <div className="about-feature-box">
-                <h4>Elite Coaches</h4>
-                <p>1-on-1 personalized programs and progress tracking.</p>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', fontSize: '1.1rem', color: 'white', fontWeight: '600' }}>
+                <span style={{ color: '#22c55e', fontSize: '1.2rem' }}>✅</span> Modern Training Environment
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', fontSize: '1.1rem', color: 'white', fontWeight: '600' }}>
+                <span style={{ color: '#22c55e', fontSize: '1.2rem' }}>✅</span> Stronger Community, Better Results
               </div>
             </div>
 
@@ -51,8 +50,8 @@ export default function About() {
             <div style={{ position: 'relative' }}>
               <div style={{ position: 'absolute', top: '-15px', left: '-15px', right: '15px', bottom: '15px', border: '2px solid var(--primary-color)', borderRadius: '1.5rem', zIndex: '0' }}></div>
               <img 
-                src={`${import.meta.env.BASE_URL}muay_thai.png`} 
-                alt="Gym Muay Thai Session" 
+                src={`${import.meta.env.BASE_URL}personal_training.png`} 
+                alt="Gym Training Session" 
                 className="about-img"
                 style={{ position: 'relative', zIndex: '1' }}
               />

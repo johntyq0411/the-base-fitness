@@ -27,12 +27,12 @@ export default function Classes({ setActiveSection, isHomepage }) {
   if (isHomepage) {
     const featuredClasses = [
       {
-        name: 'Muay Thai Striking Academy',
+        name: 'Functional Strength & Recomposition',
         coach: 'Coach Alex Tan',
         level: 'All Experience Levels',
-        desc: 'Build authentic martial arts techniques, master pad work drills, heavy bag striking, and advance cardiovascular fight conditioning.',
-        tag: 'Combat Drills',
-        icon: '🥊'
+        desc: 'Build functional strength, master movement mechanics, and optimize body composition under personalized instruction.',
+        tag: 'Strength & Machine',
+        icon: '💪'
       },
       {
         name: 'Strength & Powerlifting Elite',

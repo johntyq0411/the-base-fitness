@@ -46,21 +46,21 @@ const DEFAULT_GYM_SETTINGS = {
   operatingHours: 'Daily: 8:00 AM - 10:00 PM',
   theme: 'red',
   currency: 'RM',
-  description: 'Welcome to The Base Fitness Kluang. Whether you are aiming to build raw strength, torch calories, or master the ancient art of Muay Thai, our world-class coaches and state-of-the-art facilities are here to unleash your peak potential.'
+  description: 'Welcome to The Base Fitness Kluang. Rebuild your health, track your progress, and unleash your peak potential with our brand new machines, certified trainers, and Anovator body composition analyze.'
 };
 
 const DEFAULT_TRAINERS = [
   {
     id: 't1',
     name: 'Coach Alex Tan',
-    specialties: ['Muay Thai', 'Kickboxing', 'Self-Defense'],
-    bio: 'Former regional Muay Thai champion with over 10 years of coaching experience. Specializes in building core stamina, technique, and high-intensity fight training.',
-    photo: 'muay_thai.png',
+    specialties: ['Body Transformation', 'Functional Fitness', 'Cardio Boxing'],
+    bio: 'Certified personal trainer with over 10 years of coaching experience. Specializes in building core stamina, weight management, and high-intensity body transformations.',
+    photo: 'coach_alex.png',
     experienceYears: 12,
-    certifications: ['Certified Muay Thai Instructor (KMA)', 'NASM Performance Enhancement Specialist', 'First Aid & CPR Certified'],
-    achievements: ['Regional Muay Thai Champion 2018', 'Kluang Martial Arts Hall of Fame inductee'],
-    clientSuccessCount: '150+ Active Fighters',
-    instagram: 'alextan_muaythai'
+    certifications: ['NASM Certified Personal Trainer (CPT)', 'NASM Performance Enhancement Specialist', 'First Aid & CPR Certified'],
+    achievements: ['Certified Personal Trainer (NASM)', 'Coached 150+ transformations in Kluang area'],
+    clientSuccessCount: '150+ Transformations',
+    instagram: 'alextan_fitness'
   },
   {
     id: 't2',
@@ -109,12 +109,12 @@ const DEFAULT_PACKAGES = [
   },
   {
     id: 'p3',
-    name: 'Muay Thai & Functional Class Pack',
+    name: 'Premium Strength & Conditioning Pass',
     price: 180,
     billingPeriod: 'per month',
-    features: ['Unlimited general gym floor access', 'Unlimited Muay Thai group training classes', 'Access to bag training and pad drills', 'Priority booking for all group classes'],
+    features: ['Unlimited general gym floor access', 'Access to brand new fitness machines', 'Free Anovator body composition analyze', 'Priority booking for all group classes'],
     isPopular: false,
-    badge: 'Fighter Pass'
+    badge: 'Fitness Pass'
   },
   {
     id: 'p4',
@@ -129,29 +129,29 @@ const DEFAULT_PACKAGES = [
 
 const DEFAULT_CLASSES = [
   // Monday
-  { id: 'c1', name: 'Muay Thai Fundamentals', day: 'Monday', time: '08:00 AM - 09:30 AM', trainer: 'Coach Alex Tan', room: 'Arena A', capacity: 15, enrolled: ['member@gmail.com'] },
+  { id: 'c1', name: 'Functional Machine Training', day: 'Monday', time: '08:00 AM - 09:30 AM', trainer: 'Coach Alex Tan', room: 'Gym Floor', capacity: 15, enrolled: ['member@gmail.com'] },
   { id: 'c2', name: 'HIIT Circuit', day: 'Monday', time: '06:30 PM - 07:30 PM', trainer: 'Coach Sarah Wong', room: 'Studio B', capacity: 20, enrolled: [] },
   { id: 'c3', name: 'Powerlifting Base', day: 'Monday', time: '08:00 PM - 09:30 PM', trainer: 'Coach Marcus Lim', room: 'Gym Floor', capacity: 8, enrolled: [] },
   
   // Tuesday
-  { id: 'c4', name: 'Muay Thai Pad & Sparring', day: 'Tuesday', time: '06:00 PM - 07:30 PM', trainer: 'Coach Alex Tan', room: 'Arena A', capacity: 12, enrolled: [] },
+  { id: 'c4', name: 'Body Recomp Clinic', day: 'Tuesday', time: '06:00 PM - 07:30 PM', trainer: 'Coach Alex Tan', room: 'Gym Floor', capacity: 12, enrolled: [] },
   { id: 'c5', name: 'Vinyasa Flow Yoga', day: 'Tuesday', time: '08:00 PM - 09:00 PM', trainer: 'Coach Sarah Wong', room: 'Studio B', capacity: 15, enrolled: [] },
 
   // Wednesday
-  { id: 'c6', name: 'Muay Thai Bag Drills', day: 'Wednesday', time: '08:00 AM - 09:00 AM', trainer: 'Coach Alex Tan', room: 'Arena A', capacity: 20, enrolled: [] },
+  { id: 'c6', name: 'HIIT Cardio Combat', day: 'Wednesday', time: '08:00 AM - 09:00 AM', trainer: 'Coach Alex Tan', room: 'Studio B', capacity: 20, enrolled: [] },
   { id: 'c7', name: 'Upper Body Blast', day: 'Wednesday', time: '07:00 PM - 08:00 PM', trainer: 'Coach Marcus Lim', room: 'Gym Floor', capacity: 10, enrolled: [] },
 
   // Thursday
   { id: 'c8', name: 'Zumba & Aerobics', day: 'Thursday', time: '06:30 PM - 07:30 PM', trainer: 'Coach Sarah Wong', room: 'Studio B', capacity: 25, enrolled: [] },
-  { id: 'c9', name: 'Muay Thai Advanced Sparring', day: 'Thursday', time: '08:00 PM - 09:30 PM', trainer: 'Coach Alex Tan', room: 'Arena A', capacity: 10, enrolled: [] },
+  { id: 'c9', name: 'Advanced Strength Conditioning', day: 'Thursday', time: '08:00 PM - 09:30 PM', trainer: 'Coach Alex Tan', room: 'Gym Floor', capacity: 10, enrolled: [] },
 
   // Friday
   { id: 'c10', name: 'Functional Core Strength', day: 'Friday', time: '06:00 PM - 07:00 PM', trainer: 'Coach Marcus Lim', room: 'Gym Floor', capacity: 12, enrolled: [] },
-  { id: 'c11', name: 'Muay Thai Cardio Burn', day: 'Friday', time: '07:30 PM - 09:00 PM', trainer: 'Coach Alex Tan', room: 'Arena A', capacity: 20, enrolled: [] },
+  { id: 'c11', name: 'Core & Machine Circuit', day: 'Friday', time: '07:30 PM - 09:00 PM', trainer: 'Coach Alex Tan', room: 'Gym Floor', capacity: 20, enrolled: [] },
 
   // Saturday
   { id: 'c12', name: 'Weekend Yoga Flow', day: 'Saturday', time: '09:00 AM - 10:00 AM', trainer: 'Coach Sarah Wong', room: 'Studio B', capacity: 15, enrolled: [] },
-  { id: 'c13', name: 'Muay Thai All-Level Combat', day: 'Saturday', time: '10:30 AM - 12:00 PM', trainer: 'Coach Alex Tan', room: 'Arena A', capacity: 25, enrolled: [] },
+  { id: 'c13', name: 'Body Conditioning & Power', day: 'Saturday', time: '10:30 AM - 12:00 PM', trainer: 'Coach Alex Tan', room: 'Gym Floor', capacity: 25, enrolled: [] },
 
   // Sunday
   { id: 'c14', name: 'Strength Conditioning', day: 'Sunday', time: '10:00 AM - 11:30 AM', trainer: 'Coach Marcus Lim', room: 'Gym Floor', capacity: 15, enrolled: [] }
@@ -227,14 +227,14 @@ export const GymProvider = ({ children }) => {
       {
         email: 'fighter@gmail.com',
         name: 'Muhammad Faiz',
-        subscription: 'Muay Thai & Functional Class Pack',
+        subscription: 'Premium Strength & Conditioning Pass',
         trainer: 'Coach Alex Tan',
         ptSessionsLeft: 0,
         phone: '+60187654321',
         trainingPlan: [
-          { name: 'Heavy Bag Drills', sets: '5 rounds', reps: '3 mins', load: 'N/A', rest: '60s', notes: 'Alternate punches and kicks' },
-          { name: 'Pad Work with Coach', sets: '3 rounds', reps: '3 mins', load: 'N/A', rest: '60s', notes: 'Practice defense and counters' },
-          { name: 'Bodyweight Finisher', sets: '3', reps: '15 pushups, 20 squats', load: 'Bodyweight', rest: '30s', notes: 'High intensity' }
+          { name: 'Machine Leg Press', sets: '4', reps: '10-12', load: '120kg', rest: '90s', notes: 'Focus on full range of motion' },
+          { name: 'Lat Pulldowns', sets: '4', reps: '10', load: '45kg', rest: '60s', notes: 'Squeeze shoulder blades' },
+          { name: 'Dumbbell Chest Press', sets: '3', reps: '12', load: '15kg', rest: '60s', notes: 'Control the descent' }
         ],
         mealPlan: {
           targets: { calories: 2600, protein: 160, carbs: 320, fats: 80 },
@@ -677,14 +677,14 @@ export const GymProvider = ({ children }) => {
         {
           email: 'fighter@gmail.com',
           name: 'Muhammad Faiz',
-          subscription: 'Muay Thai & Functional Class Pack',
+          subscription: 'Premium Strength & Conditioning Pass',
           trainer: 'Coach Alex Tan',
           ptSessionsLeft: 0,
           phone: '+60187654321',
           trainingPlan: [
-            { name: 'Heavy Bag Drills', sets: '5 rounds', reps: '3 mins', load: 'N/A', rest: '60s', notes: 'Alternate punches and kicks' },
-            { name: 'Pad Work with Coach', sets: '3 rounds', reps: '3 mins', load: 'N/A', rest: '60s', notes: 'Practice defense and counters' },
-            { name: 'Bodyweight Finisher', sets: '3', reps: '15 pushups, 20 squats', load: 'Bodyweight', rest: '30s', notes: 'High intensity' }
+            { name: 'Machine Leg Press', sets: '4', reps: '10-12', load: '120kg', rest: '90s', notes: 'Focus on full range of motion' },
+            { name: 'Lat Pulldowns', sets: '4', reps: '10', load: '45kg', rest: '60s', notes: 'Squeeze shoulder blades' },
+            { name: 'Dumbbell Chest Press', sets: '3', reps: '12', load: '15kg', rest: '60s', notes: 'Control the descent' }
           ],
           mealPlan: {
             targets: { calories: 2600, protein: 160, carbs: 320, fats: 80 },
