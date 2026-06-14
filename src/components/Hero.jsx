@@ -8,7 +8,7 @@ export default function Hero({ setActiveSection }) {
     <section className="hero-wrapper" id="home">
       <div 
         className="hero-bg-media" 
-        style={{ backgroundImage: 'url("hero.png")' }}
+        style={{ backgroundImage: `url("${import.meta.env.BASE_URL}hero.png")` }}
       ></div>
       <div className="hero-overlay"></div>
       

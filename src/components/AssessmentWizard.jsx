@@ -373,10 +373,10 @@ export default function AssessmentWizard({ setActiveSection }) {
               </span>
               <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '0.75rem' }}>
                 <img 
-                  src={`/${result.coach.photo}`} 
+                  src={`${import.meta.env.BASE_URL}${result.coach.photo}`} 
                   alt={result.coach.name} 
                   style={{ width: '45px', height: '45px', borderRadius: '50%', objectFit: 'cover', border: '2px solid var(--primary-color)' }}
-                  onError={(e) => { e.currentTarget.src = '/hero.png'; }}
+                  onError={(e) => { e.currentTarget.src = `${import.meta.env.BASE_URL}hero.png`; }}
                 />
                 <div>
                   <h4 style={{ fontSize: '1.1rem', color: 'white' }}>{result.coach.name}</h4>

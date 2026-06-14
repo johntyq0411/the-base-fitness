@@ -51,7 +51,7 @@ export default function About() {
             <div style={{ position: 'relative' }}>
               <div style={{ position: 'absolute', top: '-15px', left: '-15px', right: '15px', bottom: '15px', border: '2px solid var(--primary-color)', borderRadius: '1.5rem', zIndex: '0' }}></div>
               <img 
-                src="muay_thai.png" 
+                src={`${import.meta.env.BASE_URL}muay_thai.png`} 
                 alt="Gym Muay Thai Session" 
                 className="about-img"
                 style={{ position: 'relative', zIndex: '1' }}

@@ -85,7 +85,13 @@ export default function Trainers({ setActiveSection }) {
             <div key={trainer.id} className="card trainer-card" style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
               <div style={{ position: 'relative', overflow: 'hidden', height: '250px' }}>
                 <img 
-                  src={trainer.photo ? (trainer.photo.startsWith('/') ? trainer.photo.substring(1) : trainer.photo) : 'hero.png'} 
+                  src={
+                    trainer.photo 
+                      ? (trainer.photo.startsWith('http') || trainer.photo.startsWith('data:')
+                        ? trainer.photo 
+                        : `${import.meta.env.BASE_URL}${trainer.photo.startsWith('/') ? trainer.photo.substring(1) : trainer.photo}`)
+                      : `${import.meta.env.BASE_URL}hero.png`
+                  } 
                   alt={trainer.name} 
                   className="trainer-img" 
                   style={{ width: '100%', height: '100%', objectFit: 'cover' }}

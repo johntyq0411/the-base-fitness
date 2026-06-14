@@ -82,7 +82,7 @@ export default function Navbar({ activeSection, setActiveSection }) {
       <header className="navbar-header">
         <div className="container nav-container">
           <a href="#home" className="logo" onClick={(e) => { e.preventDefault(); if (!isTrainer) setActiveSection('home'); }} aria-label="The Base Fitness" style={{ display: 'flex', alignItems: 'center', height: '100%', padding: '2px 0' }}>
-            <img src="/logo.jpg" alt="The Base Fitness Logo" style={{ height: '40px', width: 'auto', display: 'block' }} />
+            <img src={`${import.meta.env.BASE_URL}logo.jpg`} alt="The Base Fitness Logo" style={{ height: '40px', width: 'auto', display: 'block' }} />
           </a>
 
           {/* Mobile Call To Action Button (Utilizing header space for Max Buy-In / Conversion) */}
