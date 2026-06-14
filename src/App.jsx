@@ -251,8 +251,8 @@ function AppContent() {
         <div className="container">
           <div className="footer-grid">
             <div className="footer-col">
-              <div className="logo footer-logo" style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-start', gap: 0, height: '40px', marginBottom: '1.25rem' }}>
-                <img src="/logo.jpg" alt="The Base Fitness Logo" style={{ height: '40px', width: 'auto', display: 'block' }} />
+              <div className="logo footer-logo" style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-start', gap: 0, height: '55px', marginBottom: '1.25rem' }}>
+                <img src={`${import.meta.env.BASE_URL}logo.jpg`} alt="The Base Fitness Logo" style={{ height: '55px', width: 'auto', display: 'block' }} />
               </div>
               <p style={{ fontSize: '0.9rem', marginBottom: '1.5rem', maxWidth: '300px' }}>
                 Kluang's premier strength conditioning and Muay Thai training academy.
