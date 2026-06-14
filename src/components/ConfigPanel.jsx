@@ -399,7 +399,7 @@ export default function ConfigPanel({ setActiveSection }) {
                       <input 
                         type="text" 
                         className="form-control"
-                        placeholder="e.g. Muay Thai Sparring"
+                        placeholder="e.g. Functional Cardio Circuit"
                         value={newClassForm.name}
                         onChange={(e) => setNewClassForm({ ...newClassForm, name: e.target.value })}
                         required

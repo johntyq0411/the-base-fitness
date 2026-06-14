@@ -215,40 +215,38 @@ function AppContent() {
                 <section className="section" style={{ padding: '3rem 0 0 0' }}>
                   <div className="container">
                     <div style={{
-                      background: '#f8fafc',
+                      background: 'linear-gradient(135deg, #1c0a0a 0%, #0d0404 100%)',
                       border: '3px solid var(--primary-color)',
                       borderRadius: '1.5rem',
                       padding: '2.5rem 2rem',
                       textAlign: 'center',
                       position: 'relative',
                       overflow: 'hidden',
-                      boxShadow: '0 12px 40px rgba(0, 0, 0, 0.15)'
+                      boxShadow: '0 12px 40px rgba(220, 38, 38, 0.15)'
                     }}>
                       
-                      <span className="badge" style={{ marginBottom: '1rem', letterSpacing: '1px', textTransform: 'uppercase', fontWeight: '800', backgroundColor: 'var(--primary-color)', color: 'white', display: 'inline-block', padding: '0.35rem 0.75rem', borderRadius: '0.5rem' }}>
+                      <span className="badge" style={{ marginBottom: '1rem', letterSpacing: '1px', textTransform: 'uppercase', fontWeight: '800', backgroundColor: 'var(--primary-color)', color: 'white', display: 'inline-block', padding: '0.35rem 0.75rem', borderRadius: '0.5rem', border: '1px solid var(--primary-color)' }}>
                         🚨 Limited Launch Offer
                       </span>
                       
-                      <h2 style={{ fontSize: '2.2rem', fontFamily: 'var(--font-display)', color: 'var(--primary-color)', marginBottom: '0.8rem', textTransform: 'uppercase', letterSpacing: '-0.5px', fontWeight: '800' }}>
-                        首 50 位 免会员费!
+                      <h2 style={{ fontSize: '2.2rem', fontFamily: 'var(--font-display)', color: 'white', marginBottom: '0.8rem', textTransform: 'uppercase', letterSpacing: '-0.5px', fontWeight: '800' }}>
+                        首 50 位 <span style={{ color: 'var(--primary-color)' }}>免会员费!</span>
                       </h2>
-                      <h3 style={{ fontSize: '1.5rem', fontFamily: 'var(--font-display)', color: '#0f172a', marginBottom: '1.25rem', fontWeight: '800' }}>
+                      <h3 style={{ fontSize: '1.5rem', fontFamily: 'var(--font-display)', color: '#f8fafc', marginBottom: '1.25rem', fontWeight: '800' }}>
                         FIRST 50 CUSTOMERS ENJOY <span style={{ color: 'var(--primary-color)' }}>FREE MEMBERSHIP!</span>
                       </h3>
                       
-                      <p style={{ color: '#334155', maxWidth: '650px', margin: '0 auto 2rem auto', fontSize: '1.05rem', lineHeight: '1.6' }}>
-                        🔥 <strong style={{ color: '#0f172a' }}>SOMETHING BIG IS COMING TO KLUANG TOWN AREA!</strong><br />
-                        Welcome to <strong style={{ color: '#000000' }}>THE BASE FITNESS</strong>—your brand-new premium fitness destination. Be among the first 50 early birds and get your <strong style={{ color: 'var(--primary-color)' }}>Registration/Membership Fee 100% WAIVED</strong>. 
+                      <p style={{ color: 'var(--text-secondary)', maxWidth: '650px', margin: '0 auto 2rem auto', fontSize: '1.05rem', lineHeight: '1.6' }}>
+                        🔥 <strong style={{ color: 'white' }}>SOMETHING BIG IS COMING TO KLUANG TOWN AREA!</strong><br />
+                        Welcome to <strong style={{ color: 'white' }}>THE BASE FITNESS</strong>—your brand-new premium fitness destination. Be among the first 50 early birds and get your <strong style={{ color: 'var(--primary-color)' }}>Registration/Membership Fee 100% WAIVED</strong>. 
                         First come, first served!
                       </p>
                       
                       <div style={{ display: 'flex', flexWrap: 'wrap', gap: '1rem', justifyContent: 'center' }}>
                         <button 
-                          className="btn"
+                          className="btn btn-primary"
                           onClick={() => setActiveSection('pricing')}
-                          style={{ padding: '0.8rem 2rem', fontWeight: '800', borderRadius: '0.75rem', backgroundColor: '#0f172a', color: 'white', border: '1px solid #0f172a', transition: 'var(--transition-smooth)', cursor: 'pointer' }}
-                          onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = 'var(--primary-color)'; e.currentTarget.style.borderColor = 'var(--primary-color)'; }}
-                          onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = '#0f172a'; e.currentTarget.style.borderColor = '#0f172a'; }}
+                          style={{ padding: '0.8rem 2rem', fontWeight: '800', borderRadius: '0.75rem' }}
                         >
                           🎟️ View Membership Deals
                         </button>
@@ -256,10 +254,8 @@ function AppContent() {
                           href="https://www.instagram.com/thebasefitness.kluang/" 
                           target="_blank" 
                           rel="noreferrer"
-                          className="btn" 
-                          style={{ padding: '0.8rem 2rem', fontWeight: '700', borderRadius: '0.75rem', display: 'inline-flex', alignItems: 'center', gap: '0.5rem', backgroundColor: 'transparent', color: '#0f172a', border: '2px solid #0f172a', transition: 'var(--transition-smooth)' }}
-                          onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = '#0f172a'; e.currentTarget.style.color = 'white'; }}
-                          onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = 'transparent'; e.currentTarget.style.color = '#0f172a'; }}
+                          className="btn btn-secondary" 
+                          style={{ padding: '0.8rem 2rem', fontWeight: '700', borderRadius: '0.75rem', display: 'inline-flex', alignItems: 'center', gap: '0.5rem' }}
                         >
                           📸 Follow Our Instagram
                         </a>
