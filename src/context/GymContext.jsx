@@ -47,13 +47,21 @@ const DEFAULT_SUPPLEMENTS = [
     name: 'MUTANT WHEY™',
     category: 'Whey Protein',
     categoryKey: 'whey',
-    image: 'mutant_whey.png',
+    image: '21052EX_MUTANT_WHEY_Triple_Chocolate_Flavour_2.27_kg_5_lb_v2.00-L-L3.webp',
+    images: [
+      { src: '21052EX_MUTANT_WHEY_Triple_Chocolate_Flavour_2.27_kg_5_lb_v2.00-L-L3.webp', label: 'Triple Chocolate Front', flavor: 'Triple Chocolate' },
+      { src: '21051EX_MUTANT_WHEY_Vanilla_Ice_Cream_Flavour_2.27_kg_5_lb_v2.00-L3.webp', label: 'Vanilla Ice Cream Front', flavor: 'Vanilla Ice Cream' },
+      { src: '21053EX_MUTANT_WHEY_Cookies_Cream_Flavour_2.27_kg_5_lb_v2.00-L3.webp', label: 'Cookies & Cream Front', flavor: 'Cookies & Cream' },
+      { src: '21054EX_MUTANT_WHEY_Strawberry_Cream_Flavour_2.27_kg_5_lb_v2.00-L3.webp', label: 'Strawberry Cream Front', flavor: 'Strawberry Cream' },
+      { src: '21055EX_MUTANT_WHEY_Chocolate_Fudge_Brownie_Flavour_2.27_kg_5_lb_v2.00-L3.webp', label: 'Chocolate Fudge Brownie Front', flavor: 'Chocolate Fudge Brownie' },
+      { src: '21052EX_MUTANT_WHEY_back.webp', label: 'Nutrition Facts Back' }
+    ],
     price: 179,
     weight: '2.27 kg (5 lbs)',
     servings: 73,
     description: 'A premium 5-protein blend delivering 22g protein per scoop. Fast & slow-digesting proteins for sustained muscle recovery and growth. NSF Certified.',
     highlights: ['22g Protein per scoop', '5-Protein Blend', 'NSF Certified', 'Mixes Instantly'],
-    flavors: ['Chocolate', 'Vanilla', 'Strawberry', 'Triple Chocolate'],
+    flavors: ['Triple Chocolate', 'Vanilla Ice Cream', 'Cookies & Cream', 'Strawberry Cream', 'Chocolate Fudge Brownie'],
     visible: true
   },
   {
@@ -61,13 +69,17 @@ const DEFAULT_SUPPLEMENTS = [
     name: 'MUTANT MASS®',
     category: 'Mass Gainer',
     categoryKey: 'mass',
-    image: 'mutant_mass.png',
+    image: '21502EXMUTANTMASSTripleChocolateFlavour2.27KG_5LB_v2.00-L3.webp',
+    images: [
+      { src: '21502EXMUTANTMASSTripleChocolateFlavour2.27KG_5LB_v2.00-L3.webp', label: 'Triple Chocolate Front', flavor: 'Triple Chocolate' },
+      { src: '21502EX_MUTANT_MASS_back.webp', label: 'Nutrition Facts Back' }
+    ],
     price: 249,
     weight: '6.8 kg (15 lbs)',
     servings: 32,
     description: 'The ultimate mass-building formula. 1100 calories and 52g protein per serving with complex carbs to fuel serious size gains. For hardgainers who train hard.',
     highlights: ['1100 Calories per serving', '52g Protein', 'Complex Carb Matrix', 'Creatine Monohydrate included'],
-    flavors: ['Chocolate Fudge', 'Vanilla Ice Cream', 'Cookies & Cream'],
+    flavors: ['Triple Chocolate'],
     visible: true
   },
   {
@@ -75,7 +87,12 @@ const DEFAULT_SUPPLEMENTS = [
     name: 'MUTANT CREAKONG® CX8',
     category: 'Creatine',
     categoryKey: 'creatine',
-    image: 'mutant_creatine.png',
+    image: '34053US_MUTANT_CREATINE_Unflavored_300g_10.6oz_v2.00-L3.webp',
+    images: [
+      { src: '34053US_MUTANT_CREATINE_Unflavored_300g_10.6oz_v2.00-L3.webp', label: 'Unflavored Front', flavor: 'Unflavored' },
+      { src: '34053US_MUTANT_CREATINE_side1.webp', label: 'Side Directions 1' },
+      { src: '34053US_MUTANT_CREATINE_side2.webp', label: 'Side Warnings 2' }
+    ],
     price: 99,
     weight: '300g',
     servings: 60,
@@ -89,13 +106,24 @@ const DEFAULT_SUPPLEMENTS = [
     name: 'MUTANT ISO SURGE™',
     category: 'Iso Protein',
     categoryKey: 'iso',
-    image: 'mutant_iso.png',
+    image: '20052EXMUTANTHARDCOREISOTripleChocolateFlavour2.27KG_5LB_v2.10_NS-L3_1.webp',
+    images: [
+      { src: '20052EXMUTANTHARDCOREISOTripleChocolateFlavour2.27KG_5LB_v2.10_NS-L3_1.webp', label: 'Triple Chocolate Front', flavor: 'Triple Chocolate' },
+      { src: '20051EXMUTANTHARDCOREISOVanillaIceCreamFlavour2.27KG_5LB_v2.10_NS-L3_1.webp', label: 'Vanilla Ice Cream Front', flavor: 'Vanilla Ice Cream' },
+      { src: '20054EXMUTANTHARDCOREISOStrawberryMilkshakeFlavour2.27KG_5LB_v2.10_NS-L3_1.webp', label: 'Strawberry Milkshake Front', flavor: 'Strawberry Milkshake' },
+      { src: '20055EXMUTANTHARDCOREISOPeanutButterChocolateFlavour2.27KG_5LB_v2.10_NS-L3_2.webp', label: 'Peanut Butter Chocolate Front', flavor: 'Peanut Butter Chocolate' },
+      { src: '20056EXMUTANTHARDCOREISOMintChocolateChipIceCreamFlavour2.27KG_5LB_v2.10_NS-L3_2.webp', label: 'Mint Chocolate Chip Front', flavor: 'Mint Chocolate Chip' },
+      { src: '20058EXMUTANTHARDCOREISOBananaCreamFlavour2.27KG_5LB_v2.10_NS-L3_2.webp', label: 'Banana Cream Front', flavor: 'Banana Cream' },
+      { src: '20060EXMUTANTHARDCOREISOChocolateFudgeBrownieFlavour2.27KG_5LB_v2.10_NS-L3_2.webp', label: 'Chocolate Fudge Brownie Front', flavor: 'Chocolate Fudge Brownie' },
+      { src: '20051EXMUTANTHARDCOREISOside1.webp', label: 'Side Panel 1' },
+      { src: '20051EXMUTANTHARDCOREISOSide2.webp', label: 'Side Panel 2' }
+    ],
     price: 199,
     weight: '1.6 kg (3.5 lbs)',
     servings: 50,
     description: 'Ultra-pure whey isolate with 25g protein and under 1g fat per serving. Cold-filtered for maximum purity — ideal for cutting phases and lean muscle building.',
     highlights: ['25g Isolate Protein', '<1g Fat per scoop', 'Cold-Filtered', 'Lactose Reduced'],
-    flavors: ['Chocolate', 'Chocolate Peanut Butter', 'Vanilla'],
+    flavors: ['Triple Chocolate', 'Vanilla Ice Cream', 'Strawberry Milkshake', 'Peanut Butter Chocolate', 'Mint Chocolate Chip', 'Banana Cream', 'Chocolate Fudge Brownie'],
     visible: true
   },
   {
@@ -103,13 +131,23 @@ const DEFAULT_SUPPLEMENTS = [
     name: 'MUTANT BCAA 9.7™',
     category: 'BCAA',
     categoryKey: 'bcaa',
-    image: 'mutant_bcaa.png',
+    image: '34303US_MUTANT_HARDCORE_BCAA_Watermelon_Flavor_390g_13.8oz_v2.00-L3_ca1d231d-1116-4d32-a505-efc36fd155b7.webp',
+    images: [
+      { src: '34303US_MUTANT_HARDCORE_BCAA_Watermelon_Flavor_390g_13.8oz_v2.00-L3_ca1d231d-1116-4d32-a505-efc36fd155b7.webp', label: 'Watermelon Front', flavor: 'Watermelon' },
+      { src: '34301US_MUTANT_HARDCORE_BCAA_Fruit_Punch_Flavor_390g_13.8oz_v2.00-L3_66885f45-95cb-43f4-9925-55c523119271.webp', label: 'Fruit Punch Front', flavor: 'Fruit Punch' },
+      { src: '34306US_MUTANT_HARDCORE_BCAA_Peach_Flavor_390g_13.8oz_v2.00-L3.webp', label: 'Peach Front', flavor: 'Peach' },
+      { src: '34307US_MUTANT_HARDCORE_BCAA_Pineapple_Flavor_390g_13.8oz_v2.00-L3.webp', label: 'Pineapple Front', flavor: 'Pineapple' },
+      { src: '34308US_MUTANT_HARDCORE_BCAA_Lemonade_Flavor_390g_13.8oz_v2.00-L3_0b7b5e8d-e2c0-4f1b-b33d-9bfcd20a5536.webp', label: 'Lemonade Front', flavor: 'Lemonade' },
+      { src: '34312US_MUTANT_HARDCORE_BCAA_Mango_Flavor_390g_13.8oz_v2.00-L3_b5012e12-c828-4ebd-a3a6-edb54b0f3958.webp', label: 'Mango Front', flavor: 'Mango' },
+      { src: '34316US_MUTANT_HARDCORE_BCAA_Grape_Flavor_390g_13.8oz_v2.00-L3.webp', label: 'Grape Front', flavor: 'Grape' },
+      { src: '34306US_MUTANT_HARDCORE_BCAABack.webp', label: 'Nutrition Facts Back' }
+    ],
     price: 99,
     weight: '348g',
     servings: 30,
     description: '9.7g of BCAAs in the clinically researched 2:1:1 ratio per serving, with added electrolytes and hydration support. Fuel performance and fight muscle breakdown.',
     highlights: ['9.7g BCAAs per serving', '2:1:1 Leucine Ratio', 'Added Electrolytes', 'Intra-workout fuel'],
-    flavors: ['Fruit Punch', 'Blue Raspberry', 'Green Apple', 'Watermelon'],
+    flavors: ['Watermelon', 'Fruit Punch', 'Peach', 'Pineapple', 'Lemonade', 'Mango', 'Grape'],
     visible: true
   },
   {
@@ -117,13 +155,21 @@ const DEFAULT_SUPPLEMENTS = [
     name: 'MUTANT EAA™',
     category: 'EAA',
     categoryKey: 'eaa',
-    image: 'mutant_eaa.png',
+    image: '22201EXMUTANTGEAARTropicalPunchFlavour420g_14.8oz_v2.00-L3.webp',
+    images: [
+      { src: '22201EXMUTANTGEAARTropicalPunchFlavour420g_14.8oz_v2.00-L3.webp', label: 'Tropical Punch Front', flavor: 'Tropical Punch' },
+      { src: '22202EX_MUTANT_GEAAR_Peach_Mango_Flavour_420g_14.8_oz_v2.00-L3.webp', label: 'Peach Mango Front', flavor: 'Peach Mango' },
+      { src: '22203EX_MUTANT_GEAAR_Blue_Raspberry_Flavour_420g_14.8_oz_v2.00-L3.webp', label: 'Blue Raspberry Front', flavor: 'Blue Raspberry' },
+      { src: '22204EX_MUTANT_GEAAR_Sweet_Iced_Tea_Flavour_420g_14.8_oz_v2.00-L3_a9ec03db-ba18-4e17-a3b4-c2df06f5ea27.webp', label: 'Sweet Iced Tea Front', flavor: 'Sweet Iced Tea' },
+      { src: '22201EX_MUTANT_GEAAR_side1.webp', label: 'Side Ingredients 1' },
+      { src: '22201EX_MUTANT_GEAAR_side2.webp', label: 'Side Nutrition 2' }
+    ],
     price: 109,
     weight: '390g',
     servings: 30,
     description: 'Complete Essential Amino Acid formula with all 9 EAAs your body cannot produce on its own. Supports muscle protein synthesis, recovery, and hydration throughout your training.',
     highlights: ['All 9 Essential Amino Acids', 'Full Spectrum EAA Profile', 'Supports Muscle Synthesis', 'Anti-Catabolism'],
-    flavors: ['Watermelon', 'Orange Mango', 'Grape'],
+    flavors: ['Tropical Punch', 'Peach Mango', 'Blue Raspberry', 'Sweet Iced Tea'],
     visible: true
   },
   {
@@ -132,6 +178,9 @@ const DEFAULT_SUPPLEMENTS = [
     category: 'Health Tech',
     categoryKey: 'tech',
     image: 'anovator_a5.png',
+    images: [
+      { src: 'anovator_a5.png', label: 'Anovator A5 Diagnostic Station' }
+    ],
     price: 18500,
     weight: '38 kg (83.7 lbs)',
     servings: 1,

@@ -18,6 +18,74 @@ export default function SupplementShop({ setActiveSection }) {
   const [activeCategory, setActiveCategory] = useState('all');
   const [selectedFlavors, setSelectedFlavors] = useState({});
   const [expandedProduct, setExpandedProduct] = useState(null);
+  const [activeImageIndexes, setActiveImageIndexes] = useState({});
+  const [lightboxState, setLightboxState] = useState(null);
+
+  const touchStartX = React.useRef(0);
+
+  // Handle keydown navigation for lightbox
+  React.useEffect(() => {
+    if (!lightboxState) return;
+
+    const handleKeyDown = (e) => {
+      const product = supplements.find(s => s.id === lightboxState.productId);
+      if (!product || !product.images || product.images.length <= 1) {
+        if (e.key === 'Escape') {
+          setLightboxState(null);
+        }
+        return;
+      }
+
+      if (e.key === 'ArrowLeft') {
+        const prevIndex = (lightboxState.activeIndex - 1 + product.images.length) % product.images.length;
+        setLightboxState(prev => ({ ...prev, activeIndex: prevIndex }));
+        setActiveImageIndexes(prev => ({ ...prev, [product.id]: prevIndex }));
+        const prevImage = product.images[prevIndex];
+        if (prevImage && prevImage.flavor) {
+          setSelectedFlavors(prev => ({ ...prev, [product.id]: prevImage.flavor }));
+        }
+      } else if (e.key === 'ArrowRight') {
+        const nextIndex = (lightboxState.activeIndex + 1) % product.images.length;
+        setLightboxState(prev => ({ ...prev, activeIndex: nextIndex }));
+        setActiveImageIndexes(prev => ({ ...prev, [product.id]: nextIndex }));
+        const nextImage = product.images[nextIndex];
+        if (nextImage && nextImage.flavor) {
+          setSelectedFlavors(prev => ({ ...prev, [product.id]: nextImage.flavor }));
+        }
+      } else if (e.key === 'Escape') {
+        setLightboxState(null);
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [lightboxState, supplements]);
+
+  const handlePrevImage = (e, product) => {
+    e.stopPropagation();
+    const currentIndex = activeImageIndexes[product.id] !== undefined 
+      ? activeImageIndexes[product.id] 
+      : (() => {
+          const f = selectedFlavors[product.id] || product.flavors[0];
+          const matchIndex = product.images?.findIndex(img => img.flavor === f);
+          return matchIndex !== -1 && matchIndex !== undefined ? matchIndex : 0;
+        })();
+    const prevIndex = (currentIndex - 1 + product.images.length) % product.images.length;
+    setActiveImageIndexes(prev => ({ ...prev, [product.id]: prevIndex }));
+  };
+
+  const handleNextImage = (e, product) => {
+    e.stopPropagation();
+    const currentIndex = activeImageIndexes[product.id] !== undefined 
+      ? activeImageIndexes[product.id] 
+      : (() => {
+          const f = selectedFlavors[product.id] || product.flavors[0];
+          const matchIndex = product.images?.findIndex(img => img.flavor === f);
+          return matchIndex !== -1 && matchIndex !== undefined ? matchIndex : 0;
+        })();
+    const nextIndex = (currentIndex + 1) % product.images.length;
+    setActiveImageIndexes(prev => ({ ...prev, [product.id]: nextIndex }));
+  };
 
   // Get member profile
   const memberProfile = useMemo(() => {
@@ -313,37 +381,225 @@ export default function SupplementShop({ setActiveSection }) {
                     {product.category}
                   </div>
 
-                  {/* Product Image */}
-                  <div style={{
-                    background: 'linear-gradient(135deg, #0d0d0d 0%, #1a0505 100%)',
-                    height: '220px',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    overflow: 'hidden',
-                    padding: '1rem',
-                    position: 'relative'
-                  }}>
+                  {/* Product Image Carousel */}
+                  <div 
+                    onClick={() => {
+                      const activeIndex = activeImageIndexes[product.id] !== undefined 
+                        ? activeImageIndexes[product.id] 
+                        : (() => {
+                            const f = selectedFlavors[product.id] || product.flavors[0];
+                            const matchIndex = product.images?.findIndex(img => img.flavor === f);
+                            return matchIndex !== -1 && matchIndex !== undefined ? matchIndex : 0;
+                          })();
+                      setLightboxState({ productId: product.id, activeIndex });
+                    }}
+                    style={{
+                      background: 'linear-gradient(135deg, #0d0d0d 0%, #1a0505 100%)',
+                      height: '240px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      overflow: 'hidden',
+                      padding: '1rem',
+                      position: 'relative',
+                      cursor: 'zoom-in'
+                    }}
+                  >
                     <div style={{
                       position: 'absolute',
                       inset: 0,
                       background: 'radial-gradient(circle at center, rgba(220,38,38,0.08) 0%, transparent 70%)'
                     }} />
-                    <img
-                      src={`${import.meta.env.BASE_URL}${product.image}`}
-                      alt={product.name}
-                      style={{
-                        maxHeight: '180px',
-                        maxWidth: '100%',
-                        objectFit: 'contain',
-                        position: 'relative',
-                        zIndex: 1,
-                        filter: 'drop-shadow(0 8px 24px rgba(0,0,0,0.6))',
-                        transition: 'transform 0.3s ease'
-                      }}
-                      onMouseEnter={e => e.target.style.transform = 'scale(1.05)'}
-                      onMouseLeave={e => e.target.style.transform = 'scale(1)'}
-                    />
+                    
+                    {/* Active Image Label Overlay */}
+                    {product.images && product.images.length > 0 && (() => {
+                      const activeIdx = activeImageIndexes[product.id] !== undefined 
+                        ? activeImageIndexes[product.id] 
+                        : (() => {
+                            const f = selectedFlavors[product.id] || product.flavors[0];
+                            const matchIndex = product.images?.findIndex(img => img.flavor === f);
+                            return matchIndex !== -1 && matchIndex !== undefined ? matchIndex : 0;
+                          })();
+                      const imgLabel = product.images[activeIdx]?.label;
+                      return imgLabel ? (
+                        <div style={{
+                          position: 'absolute',
+                          top: '10px',
+                          left: '50%',
+                          transform: 'translateX(-50%)',
+                          background: 'rgba(0,0,0,0.7)',
+                          border: '1px solid rgba(255,255,255,0.08)',
+                          color: 'rgba(255,255,255,0.85)',
+                          fontSize: '0.65rem',
+                          padding: '0.2rem 0.5rem',
+                          borderRadius: '4px',
+                          zIndex: 3,
+                          whiteSpace: 'nowrap',
+                          pointerEvents: 'none',
+                          boxShadow: '0 2px 4px rgba(0,0,0,0.5)'
+                        }}>
+                          {imgLabel}
+                        </div>
+                      ) : null;
+                    })()}
+
+                    {/* Image */}
+                    {(() => {
+                      const activeIdx = activeImageIndexes[product.id] !== undefined 
+                        ? activeImageIndexes[product.id] 
+                        : (() => {
+                            const f = selectedFlavors[product.id] || product.flavors[0];
+                            const matchIndex = product.images?.findIndex(img => img.flavor === f);
+                            return matchIndex !== -1 && matchIndex !== undefined ? matchIndex : 0;
+                          })();
+                      const imgSrc = product.images && product.images[activeIdx] 
+                        ? product.images[activeIdx].src 
+                        : product.image;
+                      return (
+                        <img
+                          src={`${import.meta.env.BASE_URL}${imgSrc}`}
+                          alt={product.name}
+                          style={{
+                            maxHeight: '190px',
+                            maxWidth: '100%',
+                            objectFit: 'contain',
+                            position: 'relative',
+                            zIndex: 1,
+                            filter: 'drop-shadow(0 8px 24px rgba(0,0,0,0.65))',
+                            transition: 'transform 0.3s ease'
+                          }}
+                          onMouseEnter={e => e.target.style.transform = 'scale(1.05)'}
+                          onMouseLeave={e => e.target.style.transform = 'scale(1)'}
+                        />
+                      );
+                    })()}
+
+                    {/* Prev/Next Navigation Overlay */}
+                    {product.images && product.images.length > 1 && (
+                      <>
+                        <button
+                          onClick={(e) => handlePrevImage(e, product)}
+                          style={{
+                            position: 'absolute',
+                            left: '8px',
+                            top: '50%',
+                            transform: 'translateY(-50%)',
+                            background: 'rgba(0,0,0,0.5)',
+                            border: '1px solid rgba(255,255,255,0.1)',
+                            color: 'white',
+                            width: '32px',
+                            height: '32px',
+                            borderRadius: '50%',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            cursor: 'pointer',
+                            zIndex: 4,
+                            transition: 'all 0.2s ease',
+                            fontSize: '0.9rem'
+                          }}
+                          onMouseEnter={e => {
+                            e.currentTarget.style.background = 'var(--primary-color)';
+                            e.currentTarget.style.borderColor = 'var(--primary-color)';
+                          }}
+                          onMouseLeave={e => {
+                            e.currentTarget.style.background = 'rgba(0,0,0,0.5)';
+                            e.currentTarget.style.borderColor = 'rgba(255,255,255,0.1)';
+                          }}
+                        >
+                          ‹
+                        </button>
+                        <button
+                          onClick={(e) => handleNextImage(e, product)}
+                          style={{
+                            position: 'absolute',
+                            right: '8px',
+                            top: '50%',
+                            transform: 'translateY(-50%)',
+                            background: 'rgba(0,0,0,0.5)',
+                            border: '1px solid rgba(255,255,255,0.1)',
+                            color: 'white',
+                            width: '32px',
+                            height: '32px',
+                            borderRadius: '50%',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            cursor: 'pointer',
+                            zIndex: 4,
+                            transition: 'all 0.2s ease',
+                            fontSize: '0.9rem'
+                          }}
+                          onMouseEnter={e => {
+                            e.currentTarget.style.background = 'var(--primary-color)';
+                            e.currentTarget.style.borderColor = 'var(--primary-color)';
+                          }}
+                          onMouseLeave={e => {
+                            e.currentTarget.style.background = 'rgba(0,0,0,0.5)';
+                            e.currentTarget.style.borderColor = 'rgba(255,255,255,0.1)';
+                          }}
+                        >
+                          ›
+                        </button>
+
+                        {/* Dot Indicators */}
+                        <div style={{
+                          position: 'absolute',
+                          bottom: '10px',
+                          left: '50%',
+                          transform: 'translateX(-50%)',
+                          display: 'flex',
+                          gap: '6px',
+                          zIndex: 4
+                        }}>
+                          {product.images.map((_, idx) => {
+                            const activeIdx = activeImageIndexes[product.id] !== undefined 
+                              ? activeImageIndexes[product.id] 
+                              : (() => {
+                                  const f = selectedFlavors[product.id] || product.flavors[0];
+                                  const matchIndex = product.images?.findIndex(img => img.flavor === f);
+                                  return matchIndex !== -1 && matchIndex !== undefined ? matchIndex : 0;
+                                })();
+                            const isActive = idx === activeIdx;
+                            return (
+                              <div
+                                key={idx}
+                                style={{
+                                  width: '6px',
+                                  height: '6px',
+                                  borderRadius: '50%',
+                                  background: isActive ? 'var(--primary-color)' : 'rgba(255,255,255,0.4)',
+                                  transition: 'all 0.2s ease',
+                                  boxShadow: isActive ? '0 0 6px var(--primary-color)' : 'none'
+                                }}
+                              />
+                            );
+                          })}
+                        </div>
+                      </>
+                    )}
+
+                    {/* Zoom Overlay Indicator */}
+                    <div style={{
+                      position: 'absolute',
+                      bottom: '8px',
+                      right: '8px',
+                      background: 'rgba(0,0,0,0.65)',
+                      border: '1px solid rgba(255,255,255,0.1)',
+                      color: 'rgba(255,255,255,0.7)',
+                      fontSize: '0.6rem',
+                      padding: '0.2rem 0.4rem',
+                      borderRadius: '4px',
+                      zIndex: 3,
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '3px',
+                      pointerEvents: 'none',
+                      textTransform: 'uppercase',
+                      letterSpacing: '0.05em'
+                    }}>
+                      🔍 Zoom
+                    </div>
                   </div>
 
                   {/* Product Info */}
@@ -413,7 +669,14 @@ export default function SupplementShop({ setActiveSection }) {
                           {product.flavors.map(flavor => (
                             <button
                               key={flavor}
-                              onClick={() => setSelectedFlavors(prev => ({ ...prev, [product.id]: flavor }))}
+                              onClick={() => {
+                                setSelectedFlavors(prev => ({ ...prev, [product.id]: flavor }));
+                                // Sync image index to match flavor
+                                const matchIndex = product.images?.findIndex(img => img.flavor === flavor);
+                                if (matchIndex !== -1 && matchIndex !== undefined) {
+                                  setActiveImageIndexes(prev => ({ ...prev, [product.id]: matchIndex }));
+                                }
+                              }}
                               style={{
                                 padding: '0.3rem 0.7rem',
                                 borderRadius: '6px',
@@ -530,6 +793,296 @@ export default function SupplementShop({ setActiveSection }) {
             </span>
           </p>
         </div>
+
+        {/* ===== LIGHTBOX MODAL ===== */}
+        {lightboxState && (() => {
+          const product = supplements.find(s => s.id === lightboxState.productId);
+          if (!product) return null;
+          const activeIdx = lightboxState.activeIndex;
+          const currentImg = product.images && product.images[activeIdx] 
+            ? product.images[activeIdx] 
+            : { src: product.image, label: product.name };
+          
+          const handleLightboxPrev = () => {
+            if (!product.images || product.images.length <= 1) return;
+            const prevIndex = (activeIdx - 1 + product.images.length) % product.images.length;
+            setLightboxState(prev => ({ ...prev, activeIndex: prevIndex }));
+            setActiveImageIndexes(prev => ({ ...prev, [product.id]: prevIndex }));
+            const prevImage = product.images[prevIndex];
+            if (prevImage && prevImage.flavor) {
+              setSelectedFlavors(prev => ({ ...prev, [product.id]: prevImage.flavor }));
+            }
+          };
+
+          const handleLightboxNext = () => {
+            if (!product.images || product.images.length <= 1) return;
+            const nextIndex = (activeIdx + 1) % product.images.length;
+            setLightboxState(prev => ({ ...prev, activeIndex: nextIndex }));
+            setActiveImageIndexes(prev => ({ ...prev, [product.id]: nextIndex }));
+            const nextImage = product.images[nextIndex];
+            if (nextImage && nextImage.flavor) {
+              setSelectedFlavors(prev => ({ ...prev, [product.id]: nextImage.flavor }));
+            }
+          };
+
+          const handleTouchStart = (e) => {
+            touchStartX.current = e.changedTouches[0].screenX;
+          };
+
+          const handleTouchEnd = (e) => {
+            const diffX = touchStartX.current - e.changedTouches[0].screenX;
+            const swipeThreshold = 50;
+            if (diffX > swipeThreshold) {
+              handleLightboxNext();
+            } else if (diffX < -swipeThreshold) {
+              handleLightboxPrev();
+            }
+          };
+
+          return (
+            <div 
+              onClick={() => setLightboxState(null)}
+              style={{
+                position: 'fixed',
+                top: 0,
+                left: 0,
+                right: 0,
+                bottom: 0,
+                background: 'rgba(5, 5, 5, 0.95)',
+                backdropFilter: 'blur(20px)',
+                zIndex: 1000,
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                justifyContent: 'center',
+                padding: '2rem',
+                userSelect: 'none'
+              }}
+            >
+              {/* Top controls */}
+              <div 
+                onClick={(e) => e.stopPropagation()}
+                style={{
+                  position: 'absolute',
+                  top: '20px',
+                  width: '100%',
+                  maxWidth: '1200px',
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                  padding: '0 2rem',
+                  boxSizing: 'border-box'
+                }}
+              >
+                <div>
+                  <h2 style={{
+                    margin: 0,
+                    color: 'white',
+                    fontFamily: 'var(--font-display)',
+                    fontSize: '1.4rem'
+                  }}>
+                    {product.name}
+                  </h2>
+                  <div style={{ color: 'var(--primary-color)', fontSize: '0.85rem', fontWeight: '600', marginTop: '0.2rem' }}>
+                    {currentImg.label || 'Product View'}
+                  </div>
+                </div>
+
+                <button 
+                  onClick={() => setLightboxState(null)}
+                  style={{
+                    background: 'rgba(255, 255, 255, 0.05)',
+                    border: '1px solid rgba(255, 255, 255, 0.1)',
+                    color: 'white',
+                    width: '44px',
+                    height: '44px',
+                    borderRadius: '50%',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    fontSize: '1.5rem',
+                    cursor: 'pointer',
+                    transition: 'all 0.2s ease'
+                  }}
+                  onMouseEnter={e => {
+                    e.currentTarget.style.background = 'rgba(220, 38, 38, 0.9)';
+                    e.currentTarget.style.borderColor = 'rgba(220, 38, 38, 0.9)';
+                  }}
+                  onMouseLeave={e => {
+                    e.currentTarget.style.background = 'rgba(255, 255, 255, 0.05)';
+                    e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.1)';
+                  }}
+                >
+                  &times;
+                </button>
+              </div>
+
+              {/* Main content viewport */}
+              <div 
+                onClick={(e) => e.stopPropagation()}
+                onTouchStart={handleTouchStart}
+                onTouchEnd={handleTouchEnd}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  width: '100%',
+                  maxWidth: '900px',
+                  height: '65vh',
+                  position: 'relative',
+                  marginTop: '2rem'
+                }}
+              >
+                {/* Prev button */}
+                {product.images && product.images.length > 1 && (
+                  <button 
+                    onClick={handleLightboxPrev}
+                    style={{
+                      position: 'absolute',
+                      left: '10px',
+                      background: 'rgba(0,0,0,0.5)',
+                      border: '1px solid rgba(255,255,255,0.1)',
+                      color: 'white',
+                      width: '48px',
+                      height: '48px',
+                      borderRadius: '50%',
+                      fontSize: '1.5rem',
+                      cursor: 'pointer',
+                      zIndex: 10,
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      transition: 'all 0.2s ease'
+                    }}
+                    onMouseEnter={e => {
+                      e.currentTarget.style.background = 'var(--primary-color)';
+                      e.currentTarget.style.borderColor = 'var(--primary-color)';
+                    }}
+                    onMouseLeave={e => {
+                      e.currentTarget.style.background = 'rgba(0,0,0,0.5)';
+                      e.currentTarget.style.borderColor = 'rgba(255,255,255,0.1)';
+                    }}
+                  >
+                    &#8249;
+                  </button>
+                )}
+
+                {/* Main image in modal */}
+                <img 
+                  src={`${import.meta.env.BASE_URL}${currentImg.src}`} 
+                  alt={currentImg.label}
+                  style={{
+                    maxHeight: '100%',
+                    maxWidth: '100%',
+                    objectFit: 'contain',
+                    filter: 'drop-shadow(0 20px 50px rgba(0,0,0,0.85))'
+                  }}
+                />
+
+                {/* Next button */}
+                {product.images && product.images.length > 1 && (
+                  <button 
+                    onClick={handleLightboxNext}
+                    style={{
+                      position: 'absolute',
+                      right: '10px',
+                      background: 'rgba(0,0,0,0.5)',
+                      border: '1px solid rgba(255,255,255,0.1)',
+                      color: 'white',
+                      width: '48px',
+                      height: '48px',
+                      borderRadius: '50%',
+                      fontSize: '1.5rem',
+                      cursor: 'pointer',
+                      zIndex: 10,
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      transition: 'all 0.2s ease'
+                    }}
+                    onMouseEnter={e => {
+                      e.currentTarget.style.background = 'var(--primary-color)';
+                      e.currentTarget.style.borderColor = 'var(--primary-color)';
+                    }}
+                    onMouseLeave={e => {
+                      e.currentTarget.style.background = 'rgba(0,0,0,0.5)';
+                      e.currentTarget.style.borderColor = 'rgba(255,255,255,0.1)';
+                    }}
+                  >
+                    &#8250;
+                  </button>
+                )}
+              </div>
+
+              {/* Bottom Thumbnail Strip */}
+              {product.images && product.images.length > 1 && (
+                <div 
+                  onClick={(e) => e.stopPropagation()}
+                  style={{
+                    marginTop: '2rem',
+                    display: 'flex',
+                    gap: '10px',
+                    padding: '10px',
+                    overflowX: 'auto',
+                    maxWidth: '90%',
+                    background: 'rgba(255, 255, 255, 0.02)',
+                    border: '1px solid rgba(255, 255, 255, 0.05)',
+                    borderRadius: '12px',
+                    scrollbarWidth: 'thin'
+                  }}
+                >
+                  {product.images.map((img, idx) => {
+                    const isThumbActive = idx === activeIdx;
+                    return (
+                      <button
+                        key={idx}
+                        onClick={() => {
+                          setLightboxState(prev => ({ ...prev, activeIndex: idx }));
+                          setActiveImageIndexes(prev => ({ ...prev, [product.id]: idx }));
+                          if (img.flavor) {
+                            setSelectedFlavors(prev => ({ ...prev, [product.id]: img.flavor }));
+                          }
+                        }}
+                        style={{
+                          width: '60px',
+                          height: '60px',
+                          borderRadius: '8px',
+                          border: isThumbActive ? '2px solid var(--primary-color)' : '1px solid rgba(255, 255, 255, 0.1)',
+                          background: 'rgba(0,0,0,0.5)',
+                          padding: '3px',
+                          cursor: 'pointer',
+                          flexShrink: 0,
+                          transition: 'all 0.2s ease'
+                        }}
+                      >
+                        <img 
+                          src={`${import.meta.env.BASE_URL}${img.src}`}
+                          alt={img.label}
+                          style={{
+                            width: '100%',
+                            height: '100%',
+                            objectFit: 'contain',
+                            opacity: isThumbActive ? 1 : 0.6
+                          }}
+                        />
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+
+              {/* Instructions helper overlay */}
+              <div style={{
+                marginTop: '1rem',
+                color: 'rgba(255,255,255,0.4)',
+                fontSize: '0.75rem',
+                textAlign: 'center'
+              }}>
+                Swipe or use Left/Right arrow keys to navigate. Click anywhere outside to close.
+              </div>
+            </div>
+          );
+        })()}
       </div>
     </div>
   );
