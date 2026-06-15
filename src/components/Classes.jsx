@@ -223,6 +223,28 @@ export default function Classes({ setActiveSection, isHomepage }) {
     }
   };
 
+  const getWeekdayDateFormatted = (dayName) => {
+    const today = new Date();
+    const todayIndex = today.getDay();
+    const dayIndexMap = {
+      'Sunday': 0,
+      'Monday': 1,
+      'Tuesday': 2,
+      'Wednesday': 3,
+      'Thursday': 4,
+      'Friday': 5,
+      'Saturday': 6
+    };
+    const targetIndex = dayIndexMap[dayName];
+    if (targetIndex === undefined) return '';
+    const diff = targetIndex - todayIndex;
+    const targetDate = new Date(today);
+    targetDate.setDate(today.getDate() + diff);
+    const dayNum = String(targetDate.getDate()).padStart(2, '0');
+    const month = targetDate.toLocaleDateString('en-US', { month: 'short' });
+    return `${dayNum}/${month}`;
+  };
+
   const getMobileDates = () => {
     const mobileDaysOrder = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
     const today = new Date();
@@ -881,7 +903,10 @@ export default function Classes({ setActiveSection, isHomepage }) {
                   <div key={day} className={`calendar-column ${isToday ? 'is-today' : ''}`}>
                     <div className="calendar-column-header">
                       <span className="calendar-day-name">{day}</span>
-                      <span className="calendar-day-label">{isToday ? 'Today' : 'Gym Slot'}</span>
+                      <span className="calendar-day-label">
+                        <strong style={{ color: 'var(--text-primary)' }}>{getWeekdayDateFormatted(day)}</strong>
+                        {isToday ? ' • Today' : ' • Gym Slot'}
+                      </span>
                     </div>
 
                     {sortedDayClasses.length > 0 ? (
@@ -902,21 +927,61 @@ export default function Classes({ setActiveSection, isHomepage }) {
                               </svg>
                               <span>{c.time.split(' - ')[0]}</span>
                             </div>
-                            <div className="calendar-card-title">{c.name}</div>
-                            <div className="calendar-card-meta">
-                              <span>👤 {c.trainer.split(' ').slice(-1)[0]}</span>
-                              <span>📍 {c.room}</span>
+                            <div className="calendar-card-title">
+                              {getClassEmoji(c.name)} {c.name}
                             </div>
-                            <div className="calendar-card-spots">
-                              {isEnrolled ? (
-                                <span className="booked-badge">Booked</span>
-                              ) : spotsLeft <= 0 ? (
-                                <span className="spots-badge full">Full</span>
-                              ) : spotsLeft <= 3 ? (
-                                <span className="spots-badge low">{spotsLeft} left</span>
-                              ) : (
-                                <span className="spots-badge ok">{spotsLeft} slots</span>
-                              )}
+                            <div className="calendar-card-meta">
+                              <span>
+                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                  <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                                  <circle cx="12" cy="7" r="4" />
+                                </svg>
+                                {c.trainer.split(' ').slice(-1)[0]}
+                              </span>
+                              <span>
+                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                  <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
+                                  <circle cx="12" cy="10" r="3" />
+                                </svg>
+                                {c.room}
+                              </span>
+                            </div>
+                            <div className="calendar-card-bottom">
+                              <div className="calendar-card-spots-col">
+                                {isEnrolled ? (
+                                  <span className="spots-badge booked">Booked</span>
+                                ) : spotsLeft <= 0 ? (
+                                  <span className="spots-badge full">Full</span>
+                                ) : spotsLeft <= 3 ? (
+                                  <span className="spots-badge low">{spotsLeft} left</span>
+                                ) : (
+                                  <span className="spots-badge ok">{spotsLeft} slots</span>
+                                )}
+                              </div>
+                              <div className="calendar-card-action-col">
+                                {isEnrolled ? (
+                                  <button 
+                                    className="calendar-action-btn booked" 
+                                    onClick={(e) => handleActionButtonClick(e, c)}
+                                    title="Cancel booking"
+                                  >
+                                    <svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth="3" viewBox="0 0 24 24">
+                                      <path strokeLinecap="round" strokeLinejoin="round" d="M6 18 18 6M6 6l12 12" />
+                                    </svg>
+                                  </button>
+                                ) : (
+                                  <button 
+                                    className="calendar-action-btn unbooked" 
+                                    onClick={(e) => handleActionButtonClick(e, c)}
+                                    title="Book class"
+                                    disabled={spotsLeft <= 0 && currentUser.role !== 'guest'}
+                                  >
+                                    <svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth="3" viewBox="0 0 24 24">
+                                      <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+                                    </svg>
+                                  </button>
+                                )}
+                              </div>
                             </div>
                           </div>
                         );
