@@ -1,6 +1,71 @@
 import React, { useState, useContext } from 'react';
 import { GymContext } from '../context/GymContext';
 
+// Helper to generate a rolling 14-day timeline starting from Today (inclusive)
+const get14Days = () => {
+  const list = [];
+  const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+  const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+  
+  for (let i = 0; i < 14; i++) {
+    const d = new Date();
+    d.setDate(d.getDate() + i);
+    
+    const year = d.getFullYear();
+    const monthIndex = d.getMonth();
+    const monthStr = months[monthIndex];
+    const dateNum = d.getDate();
+    const dateNumStr = String(dateNum).padStart(2, '0');
+    
+    const dayName = dayNames[d.getDay()];
+    const dateLabel = `${dateNumStr}/${monthStr}`;
+    const dateKey = `${year}-${String(monthIndex + 1).padStart(2, '0')}-${dateNumStr}`;
+    
+    list.push({
+      dayName,
+      dateLabel,
+      dateKey,
+      dateNum,
+      shortName: dayName.substring(0, 3),
+      fullDateObj: d,
+      isToday: i === 0
+    });
+  }
+  return list;
+};
+
+// Helper to format date label from YYYY-MM-DD
+const getFormattedDateFromKey = (key) => {
+  if (!key) return '';
+  const parts = key.split('-');
+  if (parts.length === 3) {
+    const year = parts[0];
+    const month = parseInt(parts[1], 10);
+    const day = parseInt(parts[2], 10);
+    const d = new Date(year, month - 1, day);
+    const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    const monthName = months[d.getMonth()];
+    const dayName = dayNames[d.getDay()];
+    return `${dayName} ${day}/${monthName}`;
+  }
+  return key;
+};
+
+// General helper to match stored weekday string or specific dateKey
+const matchesDay = (storedDay, selectedDayKey) => {
+  if (!storedDay || !selectedDayKey) return false;
+  if (storedDay.toLowerCase() === selectedDayKey.toLowerCase()) return true;
+  
+  const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+  const d = new Date(selectedDayKey);
+  if (!isNaN(d.getTime())) {
+    const weekday = dayNames[d.getDay()];
+    return storedDay.toLowerCase() === weekday.toLowerCase();
+  }
+  return false;
+};
+
 export default function MemberDashboard({ setActiveSection }) {
   const { 
     currentUser, 
@@ -27,14 +92,39 @@ export default function MemberDashboard({ setActiveSection }) {
     mealPlan: ''
   };
 
-  // Find classes the user has enrolled in
-  const bookedClasses = timetable.filter(c => c.enrolled.includes(currentUser.email));
+  // Find classes the user has enrolled in specifically, including date-specific bookings
+  const bookedSessionsList = [];
+  timetable.forEach(c => {
+    c.enrolled.forEach(e => {
+      if (e.includes(':')) {
+        const [email, dateStr] = e.split(':');
+        if (email.toLowerCase() === currentUser.email.toLowerCase()) {
+          bookedSessionsList.push({
+            ...c,
+            bookingKey: `${c.id}:${dateStr}`,
+            dateStr,
+            displayDate: getFormattedDateFromKey(dateStr)
+          });
+        }
+      } else if (e.toLowerCase() === currentUser.email.toLowerCase()) {
+        bookedSessionsList.push({
+          ...c,
+          bookingKey: `${c.id}:generic`,
+          dateStr: '',
+          displayDate: c.day
+        });
+      }
+    });
+  });
 
   // Find PT bookings for this user
   const userPtBookings = ptBookings.filter(b => b.memberEmail.toLowerCase() === currentUser.email.toLowerCase());
 
   // Personal training booking local state
-  const [ptDay, setPtDay] = useState('Monday');
+  const [ptDay, setPtDay] = useState(() => {
+    const daysList = get14Days();
+    return daysList.length > 0 ? daysList[0].dateKey : '';
+  });
   const [ptTime, setPtTime] = useState('10:00 AM');
 
   // Find assigned coach details
@@ -45,8 +135,8 @@ export default function MemberDashboard({ setActiveSection }) {
     if (!assignedCoach) return;
     const times = ['08:00 AM', '10:00 AM', '12:00 PM', '02:00 PM', '04:00 PM', '06:00 PM', '08:00 PM'];
     const firstAvailable = times.find(t => {
-      const isBooked = ptBookings.some(b => b.trainerId === assignedCoach.id && b.day.toLowerCase() === day.toLowerCase() && b.time.toLowerCase() === t.toLowerCase());
-      const isBlocked = trainerBlocks.some(b => b.trainerId === assignedCoach.id && b.day.toLowerCase() === day.toLowerCase() && b.time.toLowerCase() === t.toLowerCase());
+      const isBooked = ptBookings.some(b => b.trainerId === assignedCoach.id && matchesDay(b.day, day) && b.time.toLowerCase() === t.toLowerCase());
+      const isBlocked = trainerBlocks.some(b => b.trainerId === assignedCoach.id && matchesDay(b.day, day) && b.time.toLowerCase() === t.toLowerCase());
       return !isBooked && !isBlocked;
     });
     if (firstAvailable) {
@@ -241,8 +331,7 @@ export default function MemberDashboard({ setActiveSection }) {
                 + Book New
               </button>
             </div>
-
-            {bookedClasses.length > 0 ? (
+            {bookedSessionsList.length > 0 ? (
               <div className="list-table-container">
                 <table className="list-table">
                   <thead>
@@ -254,24 +343,24 @@ export default function MemberDashboard({ setActiveSection }) {
                     </tr>
                   </thead>
                   <tbody>
-                    {bookedClasses.map(c => (
-                      <tr key={c.id}>
+                    {bookedSessionsList.map(b => (
+                      <tr key={b.bookingKey}>
                         <td data-label="Class Details">
-                          <strong>{c.name}</strong>
+                          <strong>{b.name}</strong>
                           <span style={{ display: 'block', fontSize: '0.75rem', color: 'var(--text-secondary)' }}>
-                            Coach: {c.trainer}
+                            Coach: {b.trainer}
                           </span>
                         </td>
                         <td data-label="Schedule">
-                          <span className="badge badge-primary" style={{ fontSize: '0.65rem' }}>{c.day}</span>
-                          <span style={{ display: 'block', fontSize: '0.8rem', marginTop: '0.2rem' }}>{c.time.split(' - ')[0]}</span>
+                          <span className="badge badge-primary" style={{ fontSize: '0.65rem' }}>{b.displayDate}</span>
+                          <span style={{ display: 'block', fontSize: '0.8rem', marginTop: '0.2rem' }}>{b.time.split(' - ')[0]}</span>
                         </td>
-                        <td data-label="Room">{c.room}</td>
+                        <td data-label="Room">{b.room}</td>
                         <td data-label="Action">
                           <button 
                             className="btn btn-danger" 
                             style={{ padding: '0.3rem 0.75rem', fontSize: '0.75rem' }}
-                            onClick={() => cancelClassBooking(c.id)}
+                            onClick={() => cancelClassBooking(b.id, b.dateStr)}
                           >
                             Cancel
                           </button>
@@ -283,7 +372,7 @@ export default function MemberDashboard({ setActiveSection }) {
               </div>
             ) : (
               <div style={{ backgroundColor: 'var(--bg-card)', border: '1px solid var(--border-color)', borderRadius: '1rem', padding: '3rem', textAlign: 'center', color: 'var(--text-secondary)' }}>
-                <p>You haven't reserved any group classes for this week.</p>
+                <p>You haven't reserved any group classes.</p>
               </div>
             )}
           </div>
@@ -330,8 +419,8 @@ export default function MemberDashboard({ setActiveSection }) {
                       <div>
                         <label style={{ fontSize: '0.7rem', color: 'var(--text-secondary)', textTransform: 'uppercase', display: 'block', marginBottom: '0.25rem' }}>Select Day</label>
                         <select className="form-control" value={ptDay} onChange={(e) => handlePtDayChange(e.target.value)} style={{ padding: '0.4rem', fontSize: '0.85rem', height: 'auto' }}>
-                          {['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'].map(d => (
-                            <option key={d} value={d}>{d}</option>
+                          {get14Days().map(d => (
+                            <option key={d.dateKey} value={d.dateKey}>{d.dayName} {d.dateLabel}</option>
                           ))}
                         </select>
                       </div>
@@ -339,8 +428,8 @@ export default function MemberDashboard({ setActiveSection }) {
                         <label style={{ fontSize: '0.7rem', color: 'var(--text-secondary)', textTransform: 'uppercase', display: 'block', marginBottom: '0.25rem' }}>Time Slot</label>
                         <select className="form-control" value={ptTime} onChange={(e) => setPtTime(e.target.value)} style={{ padding: '0.4rem', fontSize: '0.85rem', height: 'auto' }}>
                           {['08:00 AM', '10:00 AM', '12:00 PM', '02:00 PM', '04:00 PM', '06:00 PM', '08:00 PM'].map(t => {
-                            const isBooked = ptBookings.some(b => b.trainerId === assignedCoach.id && b.day.toLowerCase() === ptDay.toLowerCase() && b.time.toLowerCase() === t.toLowerCase());
-                            const block = trainerBlocks.find(b => b.trainerId === assignedCoach.id && b.day.toLowerCase() === ptDay.toLowerCase() && b.time.toLowerCase() === t.toLowerCase());
+                            const isBooked = ptBookings.some(b => b.trainerId === assignedCoach.id && matchesDay(b.day, ptDay) && b.time.toLowerCase() === t.toLowerCase());
+                            const block = trainerBlocks.find(b => b.trainerId === assignedCoach.id && matchesDay(b.day, ptDay) && b.time.toLowerCase() === t.toLowerCase());
                             const isBlocked = !!block;
                             let label = t;
                             if (isBooked) {
@@ -385,7 +474,7 @@ export default function MemberDashboard({ setActiveSection }) {
                         <td data-label="Trainer">
                           <strong>{b.trainerName}</strong>
                         </td>
-                        <td data-label="Day">{b.day}</td>
+                        <td data-label="Day">{getFormattedDateFromKey(b.day)}</td>
                         <td data-label="Time">{b.time}</td>
                         <td data-label="Action">
                           <button 

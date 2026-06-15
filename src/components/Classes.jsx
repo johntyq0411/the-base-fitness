@@ -1,14 +1,51 @@
 import React, { useState, useContext, useEffect } from 'react';
 import { GymContext } from '../context/GymContext';
 
+// Helper to generate a rolling 14-day timeline starting from Today (inclusive)
+const get14Days = () => {
+  const list = [];
+  const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+  const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+  
+  for (let i = 0; i < 14; i++) {
+    const d = new Date();
+    d.setDate(d.getDate() + i);
+    
+    const year = d.getFullYear();
+    const monthIndex = d.getMonth();
+    const monthStr = months[monthIndex];
+    const dateNum = d.getDate();
+    const dateNumStr = String(dateNum).padStart(2, '0');
+    
+    const dayName = dayNames[d.getDay()];
+    const dateLabel = `${dateNumStr}/${monthStr}`;
+    const dateKey = `${year}-${String(monthIndex + 1).padStart(2, '0')}-${dateNumStr}`;
+    
+    list.push({
+      dayName,
+      dateLabel,
+      dateKey,
+      dateNum,
+      shortName: dayName.substring(0, 3),
+      fullDateObj: d,
+      isToday: i === 0
+    });
+  }
+  return list;
+};
+
 export default function Classes({ setActiveSection, isHomepage }) {
   const { timetable, bookClass, cancelClassBooking, currentUser, bookTrialClass } = useContext(GymContext);
-  const [selectedDay, setSelectedDay] = useState('Monday');
+  const [selectedDay, setSelectedDay] = useState(() => {
+    const daysList = get14Days();
+    return daysList.length > 0 ? daysList[0].dateKey : '';
+  });
   const [searchQuery, setSearchQuery] = useState('');
   
   // New filters and views states
   const [viewMode, setViewMode] = useState('calendar'); // 'calendar' or 'daily'
   const [selectedClassId, setSelectedClassId] = useState(null); // ID of class in detail modal
+  const [selectedClassDateKey, setSelectedClassDateKey] = useState(''); // active date key for modal
   const [trainerFilter, setTrainerFilter] = useState('');
   const [roomFilter, setRoomFilter] = useState('');
   const [showOnlyBooked, setShowOnlyBooked] = useState(false);
@@ -35,7 +72,10 @@ export default function Classes({ setActiveSection, isHomepage }) {
   }, []);
 
   useEffect(() => {
-    setSelectedDay(getTodayDayName());
+    const daysList = get14Days();
+    if (daysList.length > 0) {
+      setSelectedDay(daysList[0].dateKey);
+    }
   }, []);
 
   const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
@@ -96,22 +136,26 @@ export default function Classes({ setActiveSection, isHomepage }) {
     
     const matchesTrainer = !trainerFilter || c.trainer === trainerFilter;
     const matchesRoom = !roomFilter || c.room === roomFilter;
-    const matchesBooked = !showOnlyBooked || (currentUser.role === 'member' && c.enrolled.includes(currentUser.email));
+    const matchesBooked = !showOnlyBooked || (currentUser.role === 'member' && c.enrolled.some(e => {
+      if (!e.includes(':')) return e.toLowerCase() === currentUser.email.toLowerCase();
+      return e.split(':')[0].toLowerCase() === currentUser.email.toLowerCase();
+    }));
 
     return matchesSearch && matchesTrainer && matchesRoom && matchesBooked;
   });
 
   // Handle class booking / trial booking modal trigger
-  const handleCardClick = (classObj) => {
+  const handleCardClick = (classObj, dateKey) => {
     setSelectedClassId(classObj.id);
+    setSelectedClassDateKey(dateKey || '');
   };
 
-  const handleBook = (classId) => {
+  const handleBook = (classId, dateStr) => {
     if (currentUser.role === 'guest') {
       // Keep selected class open but guest modal gets processed inside
       return;
     }
-    bookClass(classId);
+    bookClass(classId, dateStr);
   };
 
   // Find currently open class detail safely from the fresh state
@@ -246,48 +290,38 @@ export default function Classes({ setActiveSection, isHomepage }) {
   };
 
   const getMobileDates = () => {
-    const mobileDaysOrder = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
-    const today = new Date();
-    const dayOfWeek = today.getDay(); // Sunday is 0, Monday is 1, etc.
-    return mobileDaysOrder.map((dayName, idx) => {
-      const date = new Date(today);
-      date.setDate(today.getDate() - dayOfWeek + idx);
-      return {
-        name: dayName,
-        shortName: dayName.substring(0, 3),
-        dateNum: date.getDate(),
-        fullDateObj: date
-      };
-    });
+    return get14Days();
   };
 
   const getSelectedDayDateFormatted = () => {
-    const today = new Date();
-    const dayOfWeek = today.getDay();
-    const mobileDaysOrder = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
-    const index = mobileDaysOrder.indexOf(selectedDay);
-    if (index === -1) return '';
-    const date = new Date(today);
-    date.setDate(today.getDate() - dayOfWeek + index);
-    
-    const weekday = date.toLocaleDateString('en-US', { weekday: 'long' });
-    const dayNum = date.getDate();
-    const month = date.toLocaleDateString('en-US', { month: 'short' });
-    const year = date.getFullYear();
+    const dates = get14Days();
+    const dayObj = dates.find(d => d.dateKey === selectedDay);
+    if (!dayObj) return '';
+    const weekday = dayObj.dayName;
+    const dayNum = dayObj.dateNum;
+    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    const month = months[dayObj.fullDateObj.getMonth()];
+    const year = dayObj.fullDateObj.getFullYear();
     return `${weekday} ${dayNum} ${month} ${year}`;
   };
 
-  const handleActionButtonClick = (e, c) => {
+  const handleActionButtonClick = (e, c, dateKey) => {
     e.stopPropagation();
     if (currentUser.role === 'member') {
-      const isEnrolled = c.enrolled.includes(currentUser.email);
+      const isEnrolled = c.enrolled.some(enroll => {
+        if (!enroll.includes(':')) {
+          return enroll.toLowerCase() === currentUser.email.toLowerCase();
+        }
+        const [email, d] = enroll.split(':');
+        return email.toLowerCase() === currentUser.email.toLowerCase() && d === dateKey;
+      });
       if (isEnrolled) {
-        cancelClassBooking(c.id);
+        cancelClassBooking(c.id, dateKey);
       } else {
-        bookClass(c.id);
+        bookClass(c.id, dateKey);
       }
     } else {
-      handleCardClick(c);
+      handleCardClick(c, dateKey);
     }
   };
 
@@ -316,19 +350,25 @@ export default function Classes({ setActiveSection, isHomepage }) {
               <path strokeLinecap="round" strokeLinejoin="round" d="M6 18 18 6M6 6l12 12" />
             </svg>
           </button>
-
+ 
           {/* Time / Day Badge */}
           <div className="class-modal-time-badge">
             <svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
               <circle cx="12" cy="12" r="9" />
               <path d="M12 6v6l4 2" />
             </svg>
-            <span>{activeClass.day} | {activeClass.time}</span>
+            <span>{
+              (() => {
+                const daysList = get14Days();
+                const activeDayItem = daysList.find(d => d.dateKey === selectedClassDateKey);
+                return activeDayItem ? `${activeDayItem.dayName} ${activeDayItem.dateLabel}` : activeClass.day;
+              })()
+            } | {activeClass.time}</span>
           </div>
-
+ 
           {/* Class Title */}
           <h3 className="class-modal-title">{activeClass.name}</h3>
-
+ 
           {/* Class Meta Grid */}
           <div className="class-modal-meta-grid">
             <div className="class-modal-meta-item">
@@ -340,22 +380,33 @@ export default function Classes({ setActiveSection, isHomepage }) {
               <span className="class-modal-meta-val">📍 {activeClass.room}</span>
             </div>
           </div>
-
+ 
           {/* Class Description */}
           <div className="class-modal-desc">
             {getClassDescription(activeClass.name)}
           </div>
-
+ 
           {/* Class Capacity & slots */}
           <div className="class-modal-capacity">
             <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.8rem', marginBottom: '0.5rem', fontWeight: '600' }}>
               <span style={{ color: 'var(--text-secondary)' }}>Capacity Status</span>
-              <span>{activeClass.enrolled.length} / {activeClass.capacity} Booked Slots</span>
+              <span>{
+                activeClass.enrolled.filter(e => {
+                  if (!e.includes(':')) return true;
+                  const [email, d] = e.split(':');
+                  return d === selectedClassDateKey;
+                }).length
+              } / {activeClass.capacity} Booked Slots</span>
             </div>
             
             {/* Progress Bar */}
             {(() => {
-              const percentFull = (activeClass.enrolled.length / activeClass.capacity) * 100;
+              const activeEnrolledCount = activeClass.enrolled.filter(e => {
+                if (!e.includes(':')) return true;
+                const [email, d] = e.split(':');
+                return d === selectedClassDateKey;
+              }).length;
+              const percentFull = (activeEnrolledCount / activeClass.capacity) * 100;
               return (
                 <div style={{ width: '100%', height: '8px', backgroundColor: '#1f2937', borderRadius: '4px', overflow: 'hidden' }}>
                   <div 
@@ -370,40 +421,59 @@ export default function Classes({ setActiveSection, isHomepage }) {
                 </div>
               );
             })()}
-
+ 
             <div style={{ marginTop: '0.75rem', fontSize: '0.8rem', fontWeight: '500' }}>
               {(() => {
-                const spotsLeft = activeClass.capacity - activeClass.enrolled.length;
+                const activeEnrolledCount = activeClass.enrolled.filter(e => {
+                  if (!e.includes(':')) return true;
+                  const [email, d] = e.split(':');
+                  return d === selectedClassDateKey;
+                }).length;
+                const spotsLeft = activeClass.capacity - activeEnrolledCount;
                 if (spotsLeft <= 0) return <span style={{ color: '#ef4444' }}>⚠️ Sorry, this class has reached maximum capacity.</span>;
                 if (spotsLeft <= 3) return <span style={{ color: '#f59e0b' }}>🔥 Low availability! Only {spotsLeft} slots left.</span>;
                 return <span style={{ color: '#22c55e' }}>✅ Class is open. {spotsLeft} slots currently available.</span>;
               })()}
             </div>
           </div>
-
+ 
           {/* Admin/Trainer View: Roster list */}
           {(currentUser.role === 'admin' || currentUser.role === 'trainer') && (
             <div style={{ borderTop: '1px solid var(--border-color)', paddingTop: '1.25rem', marginBottom: '1.5rem' }}>
-              <h4 style={{ color: 'white', fontSize: '0.9rem', marginBottom: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-                📋 Enrolled Members List ({activeClass.enrolled.length})
-              </h4>
-              {activeClass.enrolled.length > 0 ? (
-                <div style={{ maxHeight: '120px', overflowY: 'auto', backgroundColor: 'rgba(0,0,0,0.2)', padding: '0.75rem', borderRadius: '0.75rem', border: '1px solid var(--border-color)' }}>
-                  <ul style={{ listStyle: 'none', paddingLeft: 0, margin: 0, fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
-                    {activeClass.enrolled.map((email, idx) => (
-                      <li key={idx} style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', padding: '0.25rem 0' }}>
-                        <span style={{ width: '4px', height: '4px', backgroundColor: 'var(--primary-color)', borderRadius: '50%' }}></span>
-                        {email}
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              ) : (
-                <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', fontStyle: 'italic' }}>No members booked yet.</p>
-              )}
+              {(() => {
+                const activeEnrollments = activeClass.enrolled.filter(e => {
+                  if (!e.includes(':')) return true;
+                  const [email, d] = e.split(':');
+                  return d === selectedClassDateKey;
+                });
+                return (
+                  <>
+                    <h4 style={{ color: 'white', fontSize: '0.9rem', marginBottom: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                      📋 Enrolled Members List ({activeEnrollments.length})
+                    </h4>
+                    {activeEnrollments.length > 0 ? (
+                      <div style={{ maxHeight: '120px', overflowY: 'auto', backgroundColor: 'rgba(0,0,0,0.2)', padding: '0.75rem', borderRadius: '0.75rem', border: '1px solid var(--border-color)' }}>
+                        <ul style={{ listStyle: 'none', paddingLeft: 0, margin: 0, fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
+                          {activeEnrollments.map((enroll, idx) => {
+                            const email = enroll.includes(':') ? enroll.split(':')[0] : enroll;
+                            return (
+                              <li key={idx} style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', padding: '0.25rem 0' }}>
+                                <span style={{ width: '4px', height: '4px', backgroundColor: 'var(--primary-color)', borderRadius: '50%' }}></span>
+                                {email}
+                              </li>
+                            );
+                          })}
+                        </ul>
+                      </div>
+                    ) : (
+                      <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', fontStyle: 'italic' }}>No members booked yet.</p>
+                    )}
+                  </>
+                );
+              })()}
             </div>
           )}
-
+ 
           {/* Trial Booking Form for Guests inside detail modal */}
           {currentUser.role === 'guest' ? (
             <div style={{ borderTop: '1px solid var(--border-color)', paddingTop: '1.25rem', marginTop: '1.5rem' }}>
@@ -429,7 +499,7 @@ export default function Classes({ setActiveSection, isHomepage }) {
                     required
                   />
                 </div>
-
+ 
                 <div className="form-group" style={{ marginBottom: '0.75rem' }}>
                   <label style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', display: 'block', marginBottom: '0.25rem' }}>Email Address</label>
                   <input 
@@ -442,7 +512,7 @@ export default function Classes({ setActiveSection, isHomepage }) {
                     required
                   />
                 </div>
-
+ 
                 <div className="form-group" style={{ marginBottom: '1.25rem' }}>
                   <label style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', display: 'block', marginBottom: '0.25rem' }}>Phone Number (Mobile)</label>
                   <input 
@@ -455,7 +525,7 @@ export default function Classes({ setActiveSection, isHomepage }) {
                     required
                   />
                 </div>
-
+ 
                 <div className="modal-actions" style={{ marginTop: '1rem', display: 'flex', gap: '0.75rem' }}>
                   <button type="button" className="btn btn-secondary" style={{ flex: 1, height: '42px', padding: 0 }} onClick={() => setSelectedClassId(null)}>
                     Cancel
@@ -472,11 +542,22 @@ export default function Classes({ setActiveSection, isHomepage }) {
               <button type="button" className="btn btn-secondary" style={{ flex: 1, padding: '0.75rem 0', borderRadius: '0.75rem' }} onClick={() => setSelectedClassId(null)}>
                 Close
               </button>
-
+ 
               {currentUser.role === 'member' ? (
                 (() => {
-                  const isEnrolled = activeClass.enrolled.includes(currentUser.email);
-                  const spotsLeft = activeClass.capacity - activeClass.enrolled.length;
+                  const isEnrolled = activeClass.enrolled.some(enroll => {
+                    if (!enroll.includes(':')) {
+                      return enroll.toLowerCase() === currentUser.email.toLowerCase();
+                    }
+                    const [email, d] = enroll.split(':');
+                    return email.toLowerCase() === currentUser.email.toLowerCase() && d === selectedClassDateKey;
+                  });
+                  const activeEnrolledCount = activeClass.enrolled.filter(e => {
+                    if (!e.includes(':')) return true;
+                    const [email, d] = e.split(':');
+                    return d === selectedClassDateKey;
+                  }).length;
+                  const spotsLeft = activeClass.capacity - activeEnrolledCount;
                   
                   if (isEnrolled) {
                     return (
@@ -485,7 +566,7 @@ export default function Classes({ setActiveSection, isHomepage }) {
                         className="btn btn-secondary" 
                         style={{ flex: 2, padding: '0.75rem 0', borderRadius: '0.75rem', border: '1px solid #ef4444', color: '#ef4444' }}
                         onClick={() => {
-                          cancelClassBooking(activeClass.id);
+                          cancelClassBooking(activeClass.id, selectedClassDateKey);
                         }}
                       >
                         Cancel Booking
@@ -509,7 +590,7 @@ export default function Classes({ setActiveSection, isHomepage }) {
                         className="btn btn-primary" 
                         style={{ flex: 2, padding: '0.75rem 0', borderRadius: '0.75rem' }}
                         onClick={() => {
-                          handleBook(activeClass.id);
+                          handleBook(activeClass.id, selectedClassDateKey);
                         }}
                       >
                         Book Session
@@ -893,32 +974,41 @@ export default function Classes({ setActiveSection, isHomepage }) {
         {/* --- WEEKLY CALENDAR GRID VIEW --- */}
         {viewMode === 'calendar' && (
           <div className="calendar-container">
-            <div className="calendar-grid">
-              {days.map(day => {
-                const dayClasses = filteredClasses.filter(c => c.day === day);
+            <div className="calendar-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(14, minmax(220px, 1fr))', gap: '1rem', overflowX: 'auto' }}>
+              {get14Days().map(dayItem => {
+                const dayClasses = filteredClasses.filter(c => c.day === dayItem.dayName);
                 const sortedDayClasses = [...dayClasses].sort((a, b) => parseTimeToMinutes(a.time) - parseTimeToMinutes(b.time));
-                const isToday = day === todayDayName;
+                const isToday = dayItem.isToday;
 
                 return (
-                  <div key={day} className={`calendar-column ${isToday ? 'is-today' : ''}`}>
+                  <div key={dayItem.dateKey} className={`calendar-column ${isToday ? 'is-today' : ''}`}>
                     <div className="calendar-column-header">
-                      <span className="calendar-day-name">{day}</span>
+                      <span className="calendar-day-name">{dayItem.dayName}</span>
                       <span className="calendar-day-label">
-                        <strong style={{ color: 'var(--text-primary)' }}>{getWeekdayDateFormatted(day)}</strong>
+                        <strong style={{ color: 'var(--text-primary)' }}>{dayItem.dateLabel}</strong>
                         {isToday ? ' • Today' : ' • Gym Slot'}
                       </span>
                     </div>
 
                     {sortedDayClasses.length > 0 ? (
                       sortedDayClasses.map(c => {
-                        const spotsLeft = c.capacity - c.enrolled.length;
-                        const isEnrolled = currentUser.role === 'member' && c.enrolled.includes(currentUser.email);
+                        const activeEnrollments = c.enrolled.filter(e => {
+                          if (!e.includes(':')) return true;
+                          const [email, d] = e.split(':');
+                          return d === dayItem.dateKey;
+                        });
+                        const spotsLeft = c.capacity - activeEnrollments.length;
+                        const isEnrolled = currentUser.role === 'member' && c.enrolled.some(e => {
+                          if (!e.includes(':')) return e.toLowerCase() === currentUser.email.toLowerCase();
+                          const [email, d] = e.split(':');
+                          return email.toLowerCase() === currentUser.email.toLowerCase() && d === dayItem.dateKey;
+                        });
                         
                         return (
                           <div 
                             key={c.id} 
                             className={`calendar-class-card ${isEnrolled ? 'booked' : ''}`}
-                            onClick={() => handleCardClick(c)}
+                            onClick={() => handleCardClick(c, dayItem.dateKey)}
                           >
                             <div className="calendar-card-time">
                               <svg width="12" height="12" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
@@ -962,7 +1052,7 @@ export default function Classes({ setActiveSection, isHomepage }) {
                                 {isEnrolled ? (
                                   <button 
                                     className="calendar-action-btn booked" 
-                                    onClick={(e) => handleActionButtonClick(e, c)}
+                                    onClick={(e) => handleActionButtonClick(e, c, dayItem.dateKey)}
                                     title="Cancel booking"
                                   >
                                     <svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth="3" viewBox="0 0 24 24">
@@ -972,7 +1062,7 @@ export default function Classes({ setActiveSection, isHomepage }) {
                                 ) : (
                                   <button 
                                     className="calendar-action-btn unbooked" 
-                                    onClick={(e) => handleActionButtonClick(e, c)}
+                                    onClick={(e) => handleActionButtonClick(e, c, dayItem.dateKey)}
                                     title="Book class"
                                     disabled={spotsLeft <= 0 && currentUser.role !== 'guest'}
                                   >
@@ -1003,93 +1093,106 @@ export default function Classes({ setActiveSection, isHomepage }) {
           <>
             {/* Day Selection Tabs */}
             <div className="day-tabs">
-              {days.map(day => {
-                const dayClassesCount = filteredClasses.filter(c => c.day === day).length;
+              {get14Days().map(dayItem => {
+                const dayClassesCount = filteredClasses.filter(c => c.day === dayItem.dayName).length;
                 return (
                   <button 
-                    key={day}
-                    className={`day-tab ${selectedDay === day ? 'active' : ''}`}
-                    onClick={() => setSelectedDay(day)}
+                    key={dayItem.dateKey}
+                    className={`day-tab ${selectedDay === dayItem.dateKey ? 'active' : ''}`}
+                    onClick={() => setSelectedDay(dayItem.dateKey)}
                   >
-                    <span className="day-full">{day} ({dayClassesCount})</span>
-                    <span className="day-short">{day.substring(0, 3)} ({dayClassesCount})</span>
+                    <span className="day-full">{dayItem.dayName} {dayItem.dateLabel} ({dayClassesCount})</span>
+                    <span className="day-short">{dayItem.shortName} {dayItem.dateLabel} ({dayClassesCount})</span>
                   </button>
                 );
               })}
             </div>
 
             {/* Classes list for selected day */}
-            {filteredClasses.filter(c => c.day === selectedDay).length > 0 ? (
-              <div className="class-grid" style={{ marginTop: '2rem' }}>
-                {filteredClasses
-                  .filter(c => c.day === selectedDay)
-                  .sort((a, b) => parseTimeToMinutes(a.time) - parseTimeToMinutes(b.time))
-                  .map(c => {
-                    const spotsLeft = c.capacity - c.enrolled.length;
-                    const percentFull = (c.enrolled.length / c.capacity) * 100;
-                    const isEnrolled = currentUser.role === 'member' && c.enrolled.includes(currentUser.email);
+            {(() => {
+              const activeDayItem = get14Days().find(d => d.dateKey === selectedDay);
+              const activeDayName = activeDayItem ? activeDayItem.dayName : '';
+              const dayClasses = filteredClasses.filter(c => c.day === activeDayName);
+              return dayClasses.length > 0 ? (
+                <div className="class-grid" style={{ marginTop: '2rem' }}>
+                  {dayClasses
+                    .sort((a, b) => parseTimeToMinutes(a.time) - parseTimeToMinutes(b.time))
+                    .map(c => {
+                      const activeEnrollments = c.enrolled.filter(e => {
+                        if (!e.includes(':')) return true;
+                        const [email, d] = e.split(':');
+                        return d === selectedDay;
+                      });
+                      const spotsLeft = c.capacity - activeEnrollments.length;
+                      const percentFull = (activeEnrollments.length / c.capacity) * 100;
+                      const isEnrolled = currentUser.role === 'member' && c.enrolled.some(e => {
+                        if (!e.includes(':')) return e.toLowerCase() === currentUser.email.toLowerCase();
+                        const [email, d] = e.split(':');
+                        return email.toLowerCase() === currentUser.email.toLowerCase() && d === selectedDay;
+                      });
 
-                    return (
-                      <div 
-                        key={c.id} 
-                        className={`class-card ${isEnrolled ? 'booked' : ''}`}
-                        onClick={() => handleCardClick(c)}
-                      >
-                        <div className="class-time">{c.time}</div>
-                        <h3 className="class-title">{c.name}</h3>
-                        
-                        <div className="class-meta">
-                          <span>👤 <strong>Coach:</strong> {c.trainer}</span>
-                          <span>📍 <strong>Location:</strong> {c.room}</span>
-                        </div>
-
-                        {/* Enrollment Progress Bar */}
-                        <div style={{ margin: '1rem 0 0.5rem 0' }}>
-                          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.75rem', marginBottom: '0.3rem', fontWeight: '500' }}>
-                            <span style={{ color: 'var(--text-secondary)' }}>Capacity Booking</span>
-                            <span>{c.enrolled.length} / {c.capacity} Slots</span>
+                      return (
+                        <div 
+                          key={c.id} 
+                          className={`class-card ${isEnrolled ? 'booked' : ''}`}
+                          onClick={() => handleCardClick(c, selectedDay)}
+                        >
+                          <div className="class-time">{c.time}</div>
+                          <h3 className="class-title">{c.name}</h3>
+                          
+                          <div className="class-meta">
+                            <span>👤 <strong>Coach:</strong> {c.trainer}</span>
+                            <span>📍 <strong>Location:</strong> {c.room}</span>
                           </div>
-                          <div style={{ width: '100%', height: '6px', backgroundColor: '#1f2937', borderRadius: '3px', overflow: 'hidden' }}>
-                            <div 
-                              style={{ 
-                                width: `${percentFull}%`, 
-                                height: '100%', 
-                                backgroundColor: percentFull >= 100 ? '#ef4444' : 'var(--primary-color)',
-                                boxShadow: percentFull < 100 ? '0 0 8px var(--primary-color)' : 'none',
-                                transition: 'width 0.4s ease'
-                              }}
-                            ></div>
+
+                          {/* Enrollment Progress Bar */}
+                          <div style={{ margin: '1rem 0 0.5rem 0' }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.75rem', marginBottom: '0.3rem', fontWeight: '500' }}>
+                              <span style={{ color: 'var(--text-secondary)' }}>Capacity Booking</span>
+                              <span>{activeEnrollments.length} / {c.capacity} Slots</span>
+                            </div>
+                            <div style={{ width: '100%', height: '6px', backgroundColor: '#1f2937', borderRadius: '3px', overflow: 'hidden' }}>
+                              <div 
+                                style={{ 
+                                  width: `${percentFull}%`, 
+                                  height: '100%', 
+                                  backgroundColor: percentFull >= 100 ? '#ef4444' : 'var(--primary-color)',
+                                  boxShadow: percentFull < 100 ? '0 0 8px var(--primary-color)' : 'none',
+                                  transition: 'width 0.4s ease'
+                                }}
+                              ></div>
+                            </div>
+                          </div>
+
+                          <div className="class-spots">
+                            {isEnrolled ? (
+                              <span className="spots-ok" style={{ display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
+                                <svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth="3" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" d="m4.5 12.75 6 6 9-13.5" />
+                                </svg>
+                                Booked
+                              </span>
+                            ) : spotsLeft <= 0 ? (
+                              <span className="spots-left">⚠️ Full Capacity</span>
+                            ) : spotsLeft <= 3 ? (
+                              <span className="spots-left">🔥 Only {spotsLeft} slots left!</span>
+                            ) : (
+                              <span className="spots-ok">✅ {spotsLeft} slots available</span>
+                            )}
                           </div>
                         </div>
-
-                        <div className="class-spots">
-                          {isEnrolled ? (
-                            <span className="spots-ok" style={{ display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
-                              <svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth="3" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" d="m4.5 12.75 6 6 9-13.5" />
-                              </svg>
-                              Booked
-                            </span>
-                          ) : spotsLeft <= 0 ? (
-                            <span className="spots-left">⚠️ Full Capacity</span>
-                          ) : spotsLeft <= 3 ? (
-                            <span className="spots-left">🔥 Only {spotsLeft} slots left!</span>
-                          ) : (
-                            <span className="spots-ok">✅ {spotsLeft} slots available</span>
-                          )}
-                        </div>
-                      </div>
-                    );
-                  })}
-              </div>
-            ) : (
-              <div style={{ textAlign: 'center', padding: '4rem 0', color: 'var(--text-secondary)' }}>
-                <svg width="48" height="48" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24" style={{ marginBottom: '1rem', opacity: '0.5' }}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 0 1 2.25-2.25h13.5A2.25 2.25 0 0 1 21 7.5v11.25m-18 0A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75m-18 0v-7.5A2.25 2.25 0 0 1 5.25 9h13.5A2.25 2.25 0 0 1 21 11.25v7.5" />
-                </svg>
-                <p>No group fitness classes match your filters for {selectedDay}.</p>
-              </div>
-            )}
+                      );
+                    })}
+                </div>
+              ) : (
+                <div style={{ textAlign: 'center', padding: '4rem 0', color: 'var(--text-secondary)' }}>
+                  <svg width="48" height="48" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24" style={{ marginBottom: '1rem', opacity: '0.5' }}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 0 1 2.25-2.25h13.5A2.25 2.25 0 0 1 21 7.5v11.25m-18 0A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75m-18 0v-7.5A2.25 2.25 0 0 1 5.25 9h13.5A2.25 2.25 0 0 1 21 11.25v7.5" />
+                  </svg>
+                  <p>No group fitness classes match your filters for {activeDayItem ? `${activeDayItem.dayName} ${activeDayItem.dateLabel}` : selectedDay}.</p>
+                </div>
+              );
+            })()}
           </>
         )}
 

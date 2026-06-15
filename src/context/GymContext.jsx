@@ -427,7 +427,7 @@ export const GymProvider = ({ children }) => {
   };
 
   // Book a class
-  const bookClass = (classId) => {
+  const bookClass = (classId, dateStr) => {
     if (currentUser.role !== 'member') {
       alert('Please sign in as a Member to book gym classes.');
       return false;
@@ -445,17 +445,43 @@ export const GymProvider = ({ children }) => {
 
     setTimetable(prev => prev.map(c => {
       if (c.id === classId) {
-        if (c.enrolled.includes(currentUser.email)) {
+        const enrollEntry = dateStr ? `${currentUser.email.toLowerCase()}:${dateStr}` : currentUser.email.toLowerCase();
+
+        // Check if already enrolled for this date/class
+        const isAlreadyEnrolled = c.enrolled.some(e => {
+          if (!e.includes(':')) {
+            // generic enrollment matches any day
+            return e.toLowerCase() === currentUser.email.toLowerCase();
+          }
+          const [email, d] = e.split(':');
+          if (dateStr) {
+            return email.toLowerCase() === currentUser.email.toLowerCase() && d === dateStr;
+          } else {
+            return email.toLowerCase() === currentUser.email.toLowerCase();
+          }
+        });
+
+        if (isAlreadyEnrolled) {
           message = 'You have already booked this class!';
           return c;
         }
-        if (c.enrolled.length >= c.capacity) {
+
+        // Count capacity for this date
+        const activeEnrollments = c.enrolled.filter(e => {
+          if (!e.includes(':')) return true; // generic enrollment counts for all dates
+          if (!dateStr) return true; // if no dateStr, count all
+          const [email, d] = e.split(':');
+          return d === dateStr;
+        });
+
+        if (activeEnrollments.length >= c.capacity) {
           message = 'Sorry, this class is already full!';
           return c;
         }
+
         success = true;
         message = `Successfully booked class: ${c.name}!`;
-        return { ...c, enrolled: [...c.enrolled, currentUser.email] };
+        return { ...c, enrolled: [...c.enrolled, enrollEntry] };
       }
       return c;
     }));
@@ -465,14 +491,29 @@ export const GymProvider = ({ children }) => {
   };
 
   // Cancel class booking
-  const cancelClassBooking = (classId) => {
+  const cancelClassBooking = (classId, dateStr) => {
     if (currentUser.role !== 'member') return;
 
     setTimetable(prev => prev.map(c => {
       if (c.id === classId) {
         return {
           ...c,
-          enrolled: c.enrolled.filter(e => e.toLowerCase() !== currentUser.email.toLowerCase())
+          enrolled: c.enrolled.filter(e => {
+            if (!e.includes(':')) {
+              // Plain email address
+              return e.toLowerCase() !== currentUser.email.toLowerCase();
+            }
+            const [email, d] = e.split(':');
+            if (email.toLowerCase() !== currentUser.email.toLowerCase()) {
+              return true; // keep other users' enrollments
+            }
+            // If email matches currentUser, and dateStr is provided, only remove if d === dateStr
+            if (dateStr) {
+              return d !== dateStr;
+            }
+            // If no dateStr provided, remove all of this user's enrollments for this class
+            return false;
+          })
         };
       }
       return c;

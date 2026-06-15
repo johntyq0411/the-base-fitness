@@ -1,6 +1,71 @@
 import React, { useState, useContext, useEffect } from 'react';
 import { GymContext } from '../context/GymContext';
 
+// Helper to generate a rolling 14-day timeline starting from Today (inclusive)
+const get14Days = () => {
+  const list = [];
+  const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+  const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+  
+  for (let i = 0; i < 14; i++) {
+    const d = new Date();
+    d.setDate(d.getDate() + i);
+    
+    const year = d.getFullYear();
+    const monthIndex = d.getMonth();
+    const monthStr = months[monthIndex];
+    const dateNum = d.getDate();
+    const dateNumStr = String(dateNum).padStart(2, '0');
+    
+    const dayName = dayNames[d.getDay()];
+    const dateLabel = `${dateNumStr}/${monthStr}`;
+    const dateKey = `${year}-${String(monthIndex + 1).padStart(2, '0')}-${dateNumStr}`;
+    
+    list.push({
+      dayName,
+      dateLabel,
+      dateKey,
+      dateNum,
+      shortName: dayName.substring(0, 3),
+      fullDateObj: d,
+      isToday: i === 0
+    });
+  }
+  return list;
+};
+
+// Helper to format date label from YYYY-MM-DD
+const getFormattedDateFromKey = (key) => {
+  if (!key) return '';
+  const parts = key.split('-');
+  if (parts.length === 3) {
+    const year = parts[0];
+    const month = parseInt(parts[1], 10);
+    const day = parseInt(parts[2], 10);
+    const d = new Date(year, month - 1, day);
+    const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    const monthName = months[d.getMonth()];
+    const dayName = dayNames[d.getDay()];
+    return `${dayName} ${day}/${monthName}`;
+  }
+  return key;
+};
+
+// General helper to match stored weekday string or specific dateKey
+const matchesDay = (storedDay, selectedDayKey) => {
+  if (!storedDay || !selectedDayKey) return false;
+  if (storedDay.toLowerCase() === selectedDayKey.toLowerCase()) return true;
+  
+  const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+  const d = new Date(selectedDayKey);
+  if (!isNaN(d.getTime())) {
+    const weekday = dayNames[d.getDay()];
+    return storedDay.toLowerCase() === weekday.toLowerCase();
+  }
+  return false;
+};
+
 export default function TrainerDashboard({ setActiveSection }) {
   const { 
     trainers, 
@@ -43,9 +108,21 @@ export default function TrainerDashboard({ setActiveSection }) {
   const scheduledSessions = ptBookings.filter(b => b.trainerId === activeTrainer.id);
 
   // --- CALENDAR AVAILABILITY STATE ---
-  const [calDay, setCalDay] = useState('Monday');
+  const [calDay, setCalDay] = useState(() => {
+    const daysList = get14Days();
+    return daysList.length > 0 ? daysList[0].dateKey : '';
+  });
   const [selectedSlot, setSelectedSlot] = useState(null);
   const times = ['08:00 AM', '10:00 AM', '12:00 PM', '02:00 PM', '04:00 PM', '06:00 PM', '08:00 PM'];
+
+  const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth <= 768);
+    };
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   // --- CLIENT EDITING PLAN STATE ---
   const selectedMember = members.find(m => m.email === selectedMemberEmail);
@@ -262,11 +339,11 @@ export default function TrainerDashboard({ setActiveSection }) {
     const { day, time } = selectedSlot;
     
     const booking = scheduledSessions.find(
-      b => b.day.toLowerCase() === day.toLowerCase() && b.time.toLowerCase() === time.toLowerCase()
+      b => matchesDay(b.day, day) && b.time.toLowerCase() === time.toLowerCase()
     );
     
     const block = trainerBlocks.find(
-      b => b.trainerId === activeTrainer.id && b.day.toLowerCase() === day.toLowerCase() && b.time.toLowerCase() === time.toLowerCase()
+      b => b.trainerId === activeTrainer.id && matchesDay(b.day, day) && b.time.toLowerCase() === time.toLowerCase()
     );
     
     return (
@@ -283,7 +360,7 @@ export default function TrainerDashboard({ setActiveSection }) {
               <circle cx="12" cy="12" r="9" />
               <path d="M12 6v6l4 2" />
             </svg>
-            <span>{day} | {time}</span>
+            <span>{getFormattedDateFromKey(day) || day} | {time}</span>
           </div>
           
           <h3 className="class-modal-title" style={{ color: 'white', marginBottom: '1.25rem' }}>
@@ -376,6 +453,290 @@ export default function TrainerDashboard({ setActiveSection }) {
     );
   };
 
+  const renderMobileSchedule = () => {
+    const mobileDates = get14Days();
+    const activeDayItem = mobileDates.find(d => d.dateKey === calDay) || mobileDates[0];
+    
+    // Format the date title at top
+    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    const activeDateTitle = activeDayItem 
+      ? `${activeDayItem.dayName} ${activeDayItem.dateNum} ${months[activeDayItem.fullDateObj.getMonth()]} ${activeDayItem.fullDateObj.getFullYear()}` 
+      : '';
+
+    return (
+      <div className="mobile-classes-wrapper" style={{ padding: 0 }}>
+        {/* Date Selector Bar */}
+        <div className="mobile-date-bar" style={{ marginBottom: '1.5rem', display: 'flex', gap: '0.5rem', overflowX: 'auto', paddingBottom: '0.5rem' }}>
+          {mobileDates.map((item) => {
+            const isActive = calDay === item.dateKey;
+            return (
+              <button 
+                key={item.dateKey}
+                className={`mobile-date-card ${isActive ? 'active' : ''}`}
+                onClick={() => setCalDay(item.dateKey)}
+                style={{ flexShrink: 0 }}
+              >
+                <span className="mobile-date-card-day">{item.shortName}</span>
+                <span className="mobile-date-card-num">{item.dateNum}</span>
+                {isActive && <div className="mobile-date-card-dot" />}
+              </button>
+            );
+          })}
+        </div>
+
+        <div className="mobile-day-title" style={{ marginBottom: '1rem', color: 'white', fontWeight: '700' }}>
+          {activeDateTitle}
+        </div>
+
+        <div className="mobile-classes-list" style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+          {times.map(time => {
+            // Find booking using matchesDay helper
+            const booking = scheduledSessions.find(
+              b => b.time.toLowerCase() === time.toLowerCase() && matchesDay(b.day, calDay)
+            );
+
+            // Find block using matchesDay helper
+            const block = trainerBlocks.find(
+              b => b.trainerId === activeTrainer.id && b.time.toLowerCase() === time.toLowerCase() && matchesDay(b.day, calDay)
+            );
+
+            const isEnrolled = !!booking;
+            const isBlocked = !!block;
+            const isComp = block?.type === 'personal_training';
+
+            return (
+              <div 
+                key={time}
+                className={`mobile-class-row ${isEnrolled ? 'booked' : ''}`}
+                onClick={() => setSelectedSlot({ day: calDay, time })}
+                style={{ padding: '1rem', borderRadius: '1rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', backgroundColor: isEnrolled ? 'var(--primary-glow)' : 'var(--bg-card)', border: '1px solid var(--border-color)', cursor: 'pointer' }}
+              >
+                {/* Time info */}
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
+                  <span style={{ color: 'white', fontWeight: '700', fontSize: '0.9rem' }}>{time}</span>
+                  <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>PT Session Slot</span>
+                </div>
+
+                {/* Status and Title */}
+                <div style={{ flex: 1, paddingLeft: '1.5rem' }}>
+                  <div style={{ color: 'white', fontWeight: '600', fontSize: '0.9rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                    {booking ? '👤 Booked' : block ? (isComp ? '🏋️ Comp Prep' : '🚫 Blocked') : '🟢 Available'}
+                  </div>
+                  {booking && (
+                    <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', marginTop: '0.2rem' }}>
+                      Client: {booking.memberName}
+                    </div>
+                  )}
+                  {block && (
+                    <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', marginTop: '0.2rem' }}>
+                      {block.label}
+                    </div>
+                  )}
+                </div>
+
+                {/* Action button */}
+                <div>
+                  {isEnrolled ? (
+                    <button 
+                      className="mobile-action-btn booked"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        cancelPtBooking(booking.id);
+                      }}
+                      style={{ background: 'none', border: 'none', color: '#ef4444', cursor: 'pointer' }}
+                    >
+                      <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="3" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M6 18 18 6M6 6l12 12" />
+                      </svg>
+                    </button>
+                  ) : isBlocked ? (
+                    <button 
+                      className="mobile-action-btn booked"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        removeTrainerBlock(activeTrainer.id, calDay, time);
+                      }}
+                      style={{ background: 'none', border: 'none', color: '#9ca3af', cursor: 'pointer' }}
+                    >
+                      <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="3" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 12h-15" />
+                      </svg>
+                    </button>
+                  ) : (
+                    <button 
+                      className="mobile-action-btn unbooked"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setSelectedSlot({ day: calDay, time });
+                      }}
+                      style={{ background: 'none', border: 'none', color: 'var(--primary-color)', cursor: 'pointer' }}
+                    >
+                      <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="3" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+                      </svg>
+                    </button>
+                  )}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    );
+  };
+
+  const renderDesktopSchedule = () => {
+    return (
+      <div className="calendar-container">
+        <div className="calendar-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(14, minmax(220px, 1fr))', gap: '1rem', overflowX: 'auto' }}>
+          {get14Days().map(dayItem => {
+            const isToday = dayItem.isToday;
+
+            return (
+              <div key={dayItem.dateKey} className={`calendar-column ${isToday ? 'is-today' : ''}`}>
+                <div className="calendar-column-header">
+                  <span className="calendar-day-name">{dayItem.dayName}</span>
+                  <span className="calendar-day-label">
+                    <strong style={{ color: 'var(--text-primary)' }}>{dayItem.dateLabel}</strong>
+                    {isToday ? ' • Today' : ' • Gym Slot'}
+                  </span>
+                </div>
+
+                {times.map(time => {
+                  // Find booking
+                  const booking = scheduledSessions.find(
+                    b => b.time.toLowerCase() === time.toLowerCase() && matchesDay(b.day, dayItem.dateKey)
+                  );
+
+                  // Find block
+                  const block = trainerBlocks.find(
+                    b => b.trainerId === activeTrainer.id && b.time.toLowerCase() === time.toLowerCase() && matchesDay(b.day, dayItem.dateKey)
+                  );
+
+                  const isEnrolled = !!booking;
+                  const isBlocked = !!block;
+                  const isComp = block?.type === 'personal_training';
+
+                  return (
+                    <div
+                      key={time}
+                      className={`calendar-class-card ${isEnrolled ? 'booked' : ''}`}
+                      onClick={() => setSelectedSlot({ day: dayItem.dateKey, time })}
+                    >
+                      <div className="calendar-card-time">
+                        <svg width="12" height="12" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
+                          <circle cx="12" cy="12" r="9" />
+                          <path d="M12 6v6l4 2" />
+                        </svg>
+                        <span>{time}</span>
+                      </div>
+
+                      <div className="calendar-card-title">
+                        {booking ? '👤' : block ? (isComp ? '🏋️' : '🚫') : '🟢'} {booking ? `Booked` : block ? (isComp ? 'Comp Prep' : 'Blocked') : 'Available'}
+                      </div>
+
+                      <div className="calendar-card-meta">
+                        {booking ? (
+                          <>
+                            <span>
+                              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                                <circle cx="12" cy="7" r="4" />
+                              </svg>
+                              {booking.memberName.split(' ').slice(-1)[0]}
+                            </span>
+                            <span>
+                              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
+                                <circle cx="12" cy="10" r="3" />
+                              </svg>
+                              Gym Floor
+                            </span>
+                          </>
+                        ) : block ? (
+                          <span>
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                              <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+                              <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+                            </svg>
+                            {block.label}
+                          </span>
+                        ) : (
+                          <span>
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                              <circle cx="12" cy="12" r="10" />
+                              <polyline points="12 6 12 12 16 14" />
+                            </svg>
+                            PT Coaching
+                          </span>
+                        )}
+                      </div>
+
+                      <div className="calendar-card-bottom">
+                        <div className="calendar-card-spots-col">
+                          {booking ? (
+                            <span className="spots-badge booked">Booked</span>
+                          ) : block ? (
+                            <span className="spots-badge full">{isComp ? 'Comp' : 'Blocked'}</span>
+                          ) : (
+                            <span className="spots-badge ok">Open</span>
+                          )}
+                        </div>
+
+                        <div className="calendar-card-action-col">
+                          {booking ? (
+                            <button
+                              className="calendar-action-btn booked"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                cancelPtBooking(booking.id);
+                              }}
+                              title="Cancel session"
+                            >
+                              <svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth="3" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18 18 6M6 6l12 12" />
+                              </svg>
+                            </button>
+                          ) : block ? (
+                            <button
+                              className="calendar-action-btn booked"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                removeTrainerBlock(activeTrainer.id, dayItem.dateKey, time);
+                              }}
+                              title="Unblock slot"
+                            >
+                              <svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth="3" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 12h-15" />
+                              </svg>
+                            </button>
+                          ) : (
+                            <button
+                              className="calendar-action-btn unbooked"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setSelectedSlot({ day: dayItem.dateKey, time });
+                              }}
+                              title="Block slot"
+                            >
+                              <svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth="3" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+                              </svg>
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    );
+  };
+
   return (
     <div className="section" style={{ minHeight: '75vh' }}>
       <div className="container">
@@ -446,7 +807,6 @@ export default function TrainerDashboard({ setActiveSection }) {
         </div>
 
         {/* TAB 1: SCHEDULE & AVAILABILITY */}
-        {/* TAB 1: SCHEDULE & AVAILABILITY */}
         {activeTab === 'schedule' && (
           <div>
             <div style={{ marginBottom: '2rem' }}>
@@ -458,154 +818,7 @@ export default function TrainerDashboard({ setActiveSection }) {
               </p>
             </div>
 
-            {/* Weekly Calendar Columns */}
-            <div className="calendar-container">
-              <div className="calendar-grid">
-                {['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'].map(day => {
-                  const isToday = day === todayDayName;
-
-                  return (
-                    <div key={day} className={`calendar-column ${isToday ? 'is-today' : ''}`}>
-                      <div className="calendar-column-header">
-                        <span className="calendar-day-name">{day}</span>
-                        <span className="calendar-day-label">
-                          <strong style={{ color: 'var(--text-primary)' }}>{getWeekdayDateFormatted(day)}</strong>
-                          {isToday ? ' • Today' : ' • Gym Slot'}
-                        </span>
-                      </div>
-
-                      {times.map(time => {
-                        // Find booking
-                        const booking = scheduledSessions.find(
-                          b => b.day.toLowerCase() === day.toLowerCase() && b.time.toLowerCase() === time.toLowerCase()
-                        );
-
-                        // Find block
-                        const block = trainerBlocks.find(
-                          b => b.trainerId === activeTrainer.id && b.day.toLowerCase() === day.toLowerCase() && b.time.toLowerCase() === time.toLowerCase()
-                        );
-
-                        const isEnrolled = !!booking;
-                        const isBlocked = !!block;
-                        const isComp = block?.type === 'personal_training';
-
-                        return (
-                          <div
-                            key={time}
-                            className={`calendar-class-card ${isEnrolled ? 'booked' : ''}`}
-                            onClick={() => setSelectedSlot({ day, time })}
-                          >
-                            <div className="calendar-card-time">
-                              <svg width="12" height="12" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
-                                <circle cx="12" cy="12" r="9" />
-                                <path d="M12 6v6l4 2" />
-                              </svg>
-                              <span>{time}</span>
-                            </div>
-
-                            <div className="calendar-card-title">
-                              {booking ? '👤' : block ? (isComp ? '🏋️' : '🚫') : '🟢'} {booking ? `Booked` : block ? (isComp ? 'Comp Prep' : 'Blocked') : 'Available'}
-                            </div>
-
-                            <div className="calendar-card-meta">
-                              {booking ? (
-                                <>
-                                  <span>
-                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                                      <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
-                                      <circle cx="12" cy="7" r="4" />
-                                    </svg>
-                                    {booking.memberName.split(' ').slice(-1)[0]}
-                                  </span>
-                                  <span>
-                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                                      <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
-                                      <circle cx="12" cy="10" r="3" />
-                                    </svg>
-                                    Gym Floor
-                                  </span>
-                                </>
-                              ) : block ? (
-                                <span>
-                                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                                    <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
-                                    <path d="M7 11V7a5 5 0 0 1 10 0v4" />
-                                  </svg>
-                                  {block.label}
-                                </span>
-                              ) : (
-                                <span>
-                                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                                    <circle cx="12" cy="12" r="10" />
-                                    <polyline points="12 6 12 12 16 14" />
-                                  </svg>
-                                  PT Coaching
-                                </span>
-                              )}
-                            </div>
-
-                            <div className="calendar-card-bottom">
-                              <div className="calendar-card-spots-col">
-                                {booking ? (
-                                  <span className="spots-badge booked">Booked</span>
-                                ) : block ? (
-                                  <span className="spots-badge full">{isComp ? 'Comp' : 'Blocked'}</span>
-                                ) : (
-                                  <span className="spots-badge ok">Open</span>
-                                )}
-                              </div>
-
-                              <div className="calendar-card-action-col">
-                                {booking ? (
-                                  <button
-                                    className="calendar-action-btn booked"
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      cancelPtBooking(booking.id);
-                                    }}
-                                    title="Cancel session"
-                                  >
-                                    <svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth="3" viewBox="0 0 24 24">
-                                      <path strokeLinecap="round" strokeLinejoin="round" d="M6 18 18 6M6 6l12 12" />
-                                    </svg>
-                                  </button>
-                                ) : block ? (
-                                  <button
-                                    className="calendar-action-btn booked"
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      removeTrainerBlock(activeTrainer.id, day, time);
-                                    }}
-                                    title="Unblock slot"
-                                  >
-                                    <svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth="3" viewBox="0 0 24 24">
-                                      <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 12h-15" />
-                                    </svg>
-                                  </button>
-                                ) : (
-                                  <button
-                                    className="calendar-action-btn unbooked"
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      setSelectedSlot({ day, time });
-                                    }}
-                                    title="Block slot"
-                                  >
-                                    <svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth="3" viewBox="0 0 24 24">
-                                      <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
-                                    </svg>
-                                  </button>
-                                )}
-                              </div>
-                            </div>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
+            {isMobile ? renderMobileSchedule() : renderDesktopSchedule()}
           </div>
         )}
 
