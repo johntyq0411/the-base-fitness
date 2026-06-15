@@ -19,8 +19,7 @@ export default function Hero({ setActiveSection }) {
           </div>
           
           <h1 className="hero-title">
-            Crush Your <span className="text-glow">Limits</span>.<br />
-            Build Your <span className="text-glow">Legacy</span>.
+            Crush Your <span className="text-glow">Limits</span>.<br className="hero-br" /> Build Your <span className="text-glow">Legacy</span>.
           </h1>
           
           <p className="hero-description">
