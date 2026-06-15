@@ -22,6 +22,63 @@ export default function SupplementShop({ setActiveSection }) {
   const [lightboxState, setLightboxState] = useState(null);
 
   const touchStartX = React.useRef(0);
+  const touchStartY = React.useRef(0);
+  const touchMoved = React.useRef(false);
+
+  const handleCardTouchStart = (e) => {
+    touchStartX.current = e.changedTouches[0].screenX;
+    touchStartY.current = e.changedTouches[0].screenY;
+    touchMoved.current = false;
+  };
+
+  const handleCardTouchMove = (e) => {
+    const diffX = Math.abs(e.changedTouches[0].screenX - touchStartX.current);
+    const diffY = Math.abs(e.changedTouches[0].screenY - touchStartY.current);
+    if (diffX > 10 || diffY > 10) {
+      touchMoved.current = true;
+    }
+  };
+
+  const handleCardTouchEnd = (e, product) => {
+    if (!touchMoved.current) return;
+
+    e.preventDefault();
+    e.stopPropagation();
+
+    if (!product.images || product.images.length <= 1) return;
+
+    const diffX = touchStartX.current - e.changedTouches[0].screenX;
+    const swipeThreshold = 45;
+    if (diffX > swipeThreshold) {
+      const currentIndex = activeImageIndexes[product.id] !== undefined 
+        ? activeImageIndexes[product.id] 
+        : (() => {
+            const f = selectedFlavors[product.id] || product.flavors[0];
+            const matchIndex = product.images?.findIndex(img => img.flavor === f);
+            return matchIndex !== -1 && matchIndex !== undefined ? matchIndex : 0;
+          })();
+      const nextIndex = (currentIndex + 1) % product.images.length;
+      setActiveImageIndexes(prev => ({ ...prev, [product.id]: nextIndex }));
+      const nextImage = product.images[nextIndex];
+      if (nextImage && nextImage.flavor) {
+        setSelectedFlavors(prev => ({ ...prev, [product.id]: nextImage.flavor }));
+      }
+    } else if (diffX < -swipeThreshold) {
+      const currentIndex = activeImageIndexes[product.id] !== undefined 
+        ? activeImageIndexes[product.id] 
+        : (() => {
+            const f = selectedFlavors[product.id] || product.flavors[0];
+            const matchIndex = product.images?.findIndex(img => img.flavor === f);
+            return matchIndex !== -1 && matchIndex !== undefined ? matchIndex : 0;
+          })();
+      const prevIndex = (currentIndex - 1 + product.images.length) % product.images.length;
+      setActiveImageIndexes(prev => ({ ...prev, [product.id]: prevIndex }));
+      const prevImage = product.images[prevIndex];
+      if (prevImage && prevImage.flavor) {
+        setSelectedFlavors(prev => ({ ...prev, [product.id]: prevImage.flavor }));
+      }
+    }
+  };
 
   // Handle keydown navigation for lightbox
   React.useEffect(() => {
@@ -383,7 +440,11 @@ export default function SupplementShop({ setActiveSection }) {
 
                   {/* Product Image Carousel */}
                   <div 
+                    onTouchStart={handleCardTouchStart}
+                    onTouchMove={handleCardTouchMove}
+                    onTouchEnd={(e) => handleCardTouchEnd(e, product)}
                     onClick={() => {
+                      if (touchMoved.current) return;
                       const activeIndex = activeImageIndexes[product.id] !== undefined 
                         ? activeImageIndexes[product.id] 
                         : (() => {
