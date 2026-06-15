@@ -1,4 +1,4 @@
-import React, { useState, useContext } from 'react';
+import React, { useState, useContext, useEffect } from 'react';
 import { GymProvider, GymContext } from './context/GymContext';
 import Navbar from './components/Navbar';
 import Hero from './components/Hero';
@@ -14,6 +14,10 @@ import './App.css';
 
 function AppContent() {
   const [activeSection, setActiveSection] = useState('home');
+
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'instant' });
+  }, [activeSection]);
   const { currentUser, login, gymSettings, members, setMembers } = useContext(GymContext);
 
   // Local state for portal login/signup forms
