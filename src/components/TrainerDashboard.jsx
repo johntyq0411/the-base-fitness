@@ -92,27 +92,6 @@ export default function TrainerDashboard({ setActiveSection }) {
     }
   };
 
-  // MEMBERS ASSIGNED
-  const assignedMembers = members.filter(m => 
-    m.trainer && m.trainer.toLowerCase().includes(activeTrainer.name.toLowerCase())
-  );
-
-  const filteredClients = assignedMembers.filter(member => {
-    const matchesSearch = member.name.toLowerCase().includes(clientSearchQuery.toLowerCase()) ||
-                          member.email.toLowerCase().includes(clientSearchQuery.toLowerCase());
-    const matchesSub = clientFilterSubscription === 'all' || 
-                       (member.subscription && member.subscription.toLowerCase().includes(clientFilterSubscription.toLowerCase()));
-    
-    let matchesCredits = true;
-    if (clientFilterCredits === 'has_credits') {
-      matchesCredits = member.ptSessionsLeft > 0;
-    } else if (clientFilterCredits === 'no_credits') {
-      matchesCredits = member.ptSessionsLeft === 0;
-    }
-    
-    return matchesSearch && matchesSub && matchesCredits;
-  });
-
   // PT BOOKINGS
   const scheduledSessions = ptBookings.filter(b => b.trainerId === activeTrainer.id);
 
@@ -184,6 +163,27 @@ export default function TrainerDashboard({ setActiveSection }) {
     return `${year}-${month}-${day}`;
   });
   const [photoNotes, setPhotoNotes] = useState('');
+
+  // MEMBERS ASSIGNED
+  const assignedMembers = members.filter(m => 
+    m.trainer && m.trainer.toLowerCase().includes(activeTrainer.name.toLowerCase())
+  );
+
+  const filteredClients = assignedMembers.filter(member => {
+    const matchesSearch = member.name.toLowerCase().includes(clientSearchQuery.toLowerCase()) ||
+                          member.email.toLowerCase().includes(clientSearchQuery.toLowerCase());
+    const matchesSub = clientFilterSubscription === 'all' || 
+                       (member.subscription && member.subscription.toLowerCase().includes(clientFilterSubscription.toLowerCase()));
+    
+    let matchesCredits = true;
+    if (clientFilterCredits === 'has_credits') {
+      matchesCredits = member.ptSessionsLeft > 0;
+    } else if (clientFilterCredits === 'no_credits') {
+      matchesCredits = member.ptSessionsLeft === 0;
+    }
+    
+    return matchesSearch && matchesSub && matchesCredits;
+  });
 
   // Image compressor utility to stay under localStorage limits
   const compressImage = (base64Str, callback) => {
