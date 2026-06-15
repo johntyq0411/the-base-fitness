@@ -234,7 +234,7 @@ export default function Classes({ setActiveSection, isHomepage }) {
               style={{ padding: '0.8rem 2rem', fontWeight: '700', fontSize: '0.9rem', borderRadius: '0.75rem' }}
               onClick={() => setActiveSection('classes')}
             >
-              📅 View Weekly Timetable & Book {currentUser.role === 'guest' ? 'Trial Class' : 'Class'}
+              📅 View Weekly Timetable & {currentUser?.role === 'guest' ? 'Book Trial Class' : 'Book Class'}
             </button>
           </div>
 
@@ -531,7 +531,7 @@ export default function Classes({ setActiveSection, isHomepage }) {
                     Cancel
                   </button>
                   <button type="submit" className="btn btn-primary" style={{ flex: 2, height: '42px', padding: 0 }}>
-                    Submit Trial Request
+                    Book Trial Class
                   </button>
                 </div>
               </form>
