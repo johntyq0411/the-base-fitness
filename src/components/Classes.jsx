@@ -234,7 +234,7 @@ export default function Classes({ setActiveSection, isHomepage }) {
               style={{ padding: '0.8rem 2rem', fontWeight: '700', fontSize: '0.9rem', borderRadius: '0.75rem' }}
               onClick={() => setActiveSection('classes')}
             >
-              📅 View Weekly Timetable & Book Class
+              📅 View Weekly Timetable & Book {currentUser.role === 'guest' ? 'Trial Class' : 'Class'}
             </button>
           </div>
 
@@ -775,7 +775,7 @@ export default function Classes({ setActiveSection, isHomepage }) {
                       <button 
                         className="mobile-action-btn unbooked" 
                         onClick={(e) => handleActionButtonClick(e, c, selectedDay)}
-                        title="Book class"
+                        title={currentUser.role === 'guest' ? "Book trial class" : "Book class"}
                       >
                         <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="3" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
@@ -1076,7 +1076,7 @@ export default function Classes({ setActiveSection, isHomepage }) {
                                   <button 
                                     className="calendar-action-btn unbooked" 
                                     onClick={(e) => handleActionButtonClick(e, c, dayItem.dateKey)}
-                                    title="Book class"
+                                    title={currentUser.role === 'guest' ? "Book trial class" : "Book class"}
                                     disabled={spotsLeft <= 0 && currentUser.role !== 'guest'}
                                   >
                                     <svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth="3" viewBox="0 0 24 24">
