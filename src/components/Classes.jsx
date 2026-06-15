@@ -650,12 +650,12 @@ export default function Classes({ setActiveSection, isHomepage }) {
 
         <div className="mobile-date-bar">
           {mobileDates.map((item) => {
-            const isActive = selectedDay === item.name;
+            const isActive = selectedDay === item.dateKey;
             return (
               <button 
-                key={item.name}
+                key={item.dateKey}
                 className={`mobile-date-card ${isActive ? 'active' : ''}`}
-                onClick={() => setSelectedDay(item.name)}
+                onClick={() => setSelectedDay(item.dateKey)}
               >
                 <span className="mobile-date-card-day">{item.shortName}</span>
                 <span className="mobile-date-card-num">{item.dateNum}</span>
@@ -672,15 +672,26 @@ export default function Classes({ setActiveSection, isHomepage }) {
         <div className="mobile-classes-list">
           {mobileClassesForDay.length > 0 ? (
             mobileClassesForDay.map(c => {
-              const spotsLeft = c.capacity - c.enrolled.length;
-              const isEnrolled = currentUser.role === 'member' && c.enrolled.includes(currentUser.email);
+              const activeEnrollments = c.enrolled.filter(e => {
+                if (!e.includes(':')) return true;
+                const [email, d] = e.split(':');
+                return d === selectedDay;
+              });
+              const spotsLeft = c.capacity - activeEnrollments.length;
+
+              const isEnrolled = currentUser.role === 'member' && c.enrolled.some(e => {
+                if (!e.includes(':')) return e.toLowerCase() === currentUser.email.toLowerCase();
+                const [email, d] = e.split(':');
+                return email.toLowerCase() === currentUser.email.toLowerCase() && d === selectedDay;
+              });
+
               const isFavorite = favorites.includes(c.name);
 
               return (
                 <div 
                   key={c.id} 
                   className={`mobile-class-row ${isEnrolled ? 'booked' : ''}`}
-                  onClick={() => handleCardClick(c)}
+                  onClick={() => handleCardClick(c, selectedDay)}
                 >
                   <div className="mobile-class-time-col">
                     <span className="mobile-class-time">{c.time.split(' - ')[0]}</span>
@@ -751,7 +762,7 @@ export default function Classes({ setActiveSection, isHomepage }) {
                     {isEnrolled ? (
                       <button 
                         className="mobile-action-btn booked" 
-                        onClick={(e) => handleActionButtonClick(e, c)}
+                        onClick={(e) => handleActionButtonClick(e, c, selectedDay)}
                         title="Cancel booking"
                       >
                         <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="3" viewBox="0 0 24 24">
@@ -761,7 +772,7 @@ export default function Classes({ setActiveSection, isHomepage }) {
                     ) : (
                       <button 
                         className="mobile-action-btn unbooked" 
-                        onClick={(e) => handleActionButtonClick(e, c)}
+                        onClick={(e) => handleActionButtonClick(e, c, selectedDay)}
                         title="Book class"
                       >
                         <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="3" viewBox="0 0 24 24">
