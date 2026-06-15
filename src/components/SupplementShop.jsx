@@ -197,12 +197,7 @@ export default function SupplementShop({ setActiveSection }) {
         )}
 
         {/* ===== CATEGORY FILTERS ===== */}
-        <div style={{
-          display: 'flex',
-          gap: '0.5rem',
-          flexWrap: 'wrap',
-          marginBottom: '2rem'
-        }}>
+        <div className="category-scroll-container">
           {CATEGORY_FILTERS.map(cat => (
             <button
               key={cat.key}
