@@ -911,7 +911,7 @@ export default function ConfigPanel({ setActiveSection }) {
                           type="number"
                           min="0"
                           max="50"
-                          value={localDiscounts['default'] || 5}
+                          value={localDiscounts['default'] ?? 5}
                           onChange={e => setLocalDiscounts(prev => ({ ...prev, 'default': Number(e.target.value) }))}
                           className="form-control"
                           style={{ width: '70px', padding: '0.4rem 0.6rem', textAlign: 'center' }}

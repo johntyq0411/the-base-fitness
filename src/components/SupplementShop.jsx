@@ -26,7 +26,7 @@ export default function SupplementShop({ setActiveSection }) {
 
   // Determine discount for this member
   const memberDiscount = useMemo(() => {
-    if (!memberProfile?.subscription) return supplementDiscounts['default'] || 5;
+    if (!memberProfile?.subscription) return supplementDiscounts['default'] ?? 5;
     // Try exact match first
     if (supplementDiscounts[memberProfile.subscription] !== undefined) {
       return supplementDiscounts[memberProfile.subscription];
@@ -38,7 +38,7 @@ export default function SupplementShop({ setActiveSection }) {
         return val;
       }
     }
-    return supplementDiscounts['default'] || 5;
+    return supplementDiscounts['default'] ?? 5;
   }, [memberProfile, supplementDiscounts]);
 
   // Filter visible products by category
