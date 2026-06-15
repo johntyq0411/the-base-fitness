@@ -2,7 +2,7 @@ import React, { useContext } from 'react';
 import { GymContext } from '../context/GymContext';
 
 export default function Pricing({ setActiveSection }) {
-  const { packages, subscribeToPackage, currentUser, gymSettings, members } = useContext(GymContext);
+  const { packages, subscribeToPackage, currentUser, gymSettings, members, supplementDiscounts } = useContext(GymContext);
 
   const handleSubscribe = (pkgId) => {
     if (currentUser.role === 'guest') {
@@ -62,14 +62,25 @@ export default function Pricing({ setActiveSection }) {
                 </div>
 
                 <ul className="features-list">
-                  {pkg.features.map((feature, idx) => (
-                    <li key={idx}>
-                      <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="3" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" d="m4.5 12.75 6 6 9-13.5" />
-                      </svg>
-                      {feature}
-                    </li>
-                  ))}
+                  {pkg.features
+                    .filter(feature => !feature.toLowerCase().includes('discount') && !feature.toLowerCase().includes('supplement'))
+                    .map((feature, idx) => (
+                      <li key={idx}>
+                        <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="3" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" d="m4.5 12.75 6 6 9-13.5" />
+                        </svg>
+                        {feature}
+                      </li>
+                    ))}
+                  {/* Dynamic MUTANT Supplement Discount feature */}
+                  <li style={{ color: 'white' }}>
+                    <svg width="16" height="16" fill="none" stroke="var(--primary-color)" strokeWidth="3" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="m4.5 12.75 6 6 9-13.5" />
+                    </svg>
+                    <span style={{ fontWeight: '600' }}>
+                      <span style={{ color: 'var(--primary-color)' }}>{supplementDiscounts?.[pkg.name] ?? 5}% OFF</span> all MUTANT® supplements
+                    </span>
+                  </li>
                 </ul>
 
                 {currentUser.role === 'admin' || currentUser.role === 'trainer' ? (
