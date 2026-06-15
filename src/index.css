@@ -405,8 +405,8 @@ button, input, select, textarea {
 }
 
 @media (min-width: 769px) {
-  .hero-br {
-    display: none;
+  .hero-content {
+    max-width: 850px;
   }
 }
 
