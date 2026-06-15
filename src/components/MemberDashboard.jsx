@@ -56,6 +56,7 @@ export default function MemberDashboard({ setActiveSection }) {
   const { 
     currentUser, 
     members, 
+    setMembers,
     timetable, 
     cancelClassBooking, 
     ptBookings, 
@@ -68,6 +69,41 @@ export default function MemberDashboard({ setActiveSection }) {
     addOneHour,
     matchesDay
   } = useContext(GymContext);
+
+  const [photoUploading, setPhotoUploading] = useState(false);
+
+  const handleMemberPhotoUpload = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    setPhotoUploading(true);
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      const img = new Image();
+      img.onload = () => {
+        const MAX = 400;
+        let w = img.width, h = img.height;
+        if (w > h) { if (w > MAX) { h = Math.round(h * MAX / w); w = MAX; } }
+        else { if (h > MAX) { w = Math.round(w * MAX / h); h = MAX; } }
+        const canvas = document.createElement('canvas');
+        canvas.width = w; canvas.height = h;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, w, h);
+        const dataUrl = canvas.toDataURL('image/jpeg', 0.78);
+        
+        // Update member's photo in context
+        setMembers(prev => prev.map(m => {
+          if (m.email.toLowerCase() === currentUser.email.toLowerCase()) {
+            return { ...m, photo: dataUrl };
+          }
+          return m;
+        }));
+        
+        setPhotoUploading(false);
+      };
+      img.src = ev.target.result;
+    };
+    reader.readAsDataURL(file);
+  };
 
   // Find member profile details
   const profile = members.find(m => m.email.toLowerCase() === currentUser.email.toLowerCase()) || {
@@ -139,12 +175,59 @@ export default function MemberDashboard({ setActiveSection }) {
         
         {/* Profile Info Header */}
         <div className="portal-header">
-          <div className="profile-card-details">
-            <span style={{ color: 'var(--primary-color)', fontSize: '0.85rem', fontWeight: '700', textTransform: 'uppercase' }}>
-              Welcome Back
-            </span>
-            <h3>{profile.name}</h3>
-            <p>📧 {profile.email}</p>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem', flexWrap: 'wrap' }}>
+            {/* Clickable Profile Photo */}
+            <div 
+              onClick={() => document.getElementById('member-photo-input').click()}
+              style={{
+                width: '80px', height: '80px', borderRadius: '50%',
+                overflow: 'hidden', border: '2px solid var(--primary-color)',
+                cursor: 'pointer', position: 'relative',
+                background: 'rgba(255,255,255,0.04)', display: 'flex',
+                alignItems: 'center', justifyContent: 'center',
+                boxShadow: '0 4px 20px rgba(0,0,0,0.2)', flexShrink: 0
+              }}
+              title="Click to change profile picture"
+            >
+              {profile.photo ? (
+                <img 
+                  src={profile.photo} 
+                  alt="Profile" 
+                  style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                />
+              ) : (
+                <div style={{ fontSize: '2rem', color: 'var(--text-secondary)' }}>👤</div>
+              )}
+              <div style={{
+                position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.5)',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                opacity: 0, transition: 'opacity 0.2s', borderRadius: '50%'
+              }}
+                className="hover-edit-overlay"
+                onMouseEnter={e => e.currentTarget.style.opacity = 1}
+                onMouseLeave={e => e.currentTarget.style.opacity = 0}
+              >
+                <span style={{ color: 'white', fontSize: '0.65rem', fontWeight: '700' }}>EDIT</span>
+              </div>
+            </div>
+            
+            <input 
+              id="member-photo-input"
+              type="file" accept="image/*"
+              style={{ display: 'none' }}
+              onChange={handleMemberPhotoUpload}
+            />
+
+            <div className="profile-card-details">
+              <span style={{ color: 'var(--primary-color)', fontSize: '0.85rem', fontWeight: '700', textTransform: 'uppercase' }}>
+                Welcome Back
+              </span>
+              <h3>
+                {profile.name}
+                {photoUploading && <span style={{ fontSize: '0.8rem', fontWeight: '400', color: 'var(--text-secondary)', marginLeft: '0.5rem' }}>⏳ Updating...</span>}
+              </h3>
+              <p>📧 {profile.email}</p>
+            </div>
           </div>
           
           <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', flexWrap: 'wrap' }}>

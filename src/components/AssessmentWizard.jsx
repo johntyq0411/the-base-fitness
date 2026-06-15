@@ -373,7 +373,9 @@ export default function AssessmentWizard({ setActiveSection }) {
               </span>
               <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '0.75rem' }}>
                 <img 
-                  src={`${import.meta.env.BASE_URL}${result.coach.photo}`} 
+                  src={result.coach.photo && (result.coach.photo.startsWith('data:') || result.coach.photo.startsWith('http')) 
+                    ? result.coach.photo 
+                    : `${import.meta.env.BASE_URL}${result.coach.photo}`} 
                   alt={result.coach.name} 
                   style={{ width: '45px', height: '45px', borderRadius: '50%', objectFit: 'cover', border: '2px solid var(--primary-color)' }}
                   onError={(e) => { e.currentTarget.src = `${import.meta.env.BASE_URL}hero.png`; }}

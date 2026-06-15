@@ -348,6 +348,33 @@ export default function TrainerDashboard({ setActiveSection }) {
   const [profAchieve, setProfAchieve] = useState('');
   const [profSuccess, setProfSuccess] = useState('');
   const [profInsta, setProfInsta] = useState('');
+  const [profPhotoUploading, setProfPhotoUploading] = useState(false);
+
+  // Compress & upload trainer profile photo
+  const handleTrainerPhotoUpload = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    setProfPhotoUploading(true);
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      const img = new Image();
+      img.onload = () => {
+        const MAX = 400;
+        let w = img.width, h = img.height;
+        if (w > h) { if (w > MAX) { h = Math.round(h * MAX / w); w = MAX; } }
+        else { if (h > MAX) { w = Math.round(w * MAX / h); h = MAX; } }
+        const canvas = document.createElement('canvas');
+        canvas.width = w; canvas.height = h;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, w, h);
+        const dataUrl = canvas.toDataURL('image/jpeg', 0.78);
+        setProfPhoto(dataUrl);
+        setProfPhotoUploading(false);
+      };
+      img.src = ev.target.result;
+    };
+    reader.readAsDataURL(file);
+  };
 
   // Sync profile inputs when Simulated Coach changes
   useEffect(() => {
@@ -1057,14 +1084,36 @@ export default function TrainerDashboard({ setActiveSection }) {
         
         {/* Trainer Header Area */}
         <div className="portal-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1.5rem', marginBottom: '2.5rem' }}>
-          <div>
-            <span style={{ color: 'var(--primary-color)', fontSize: '0.85rem', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-              Staff & Coach Portal
-            </span>
-            <h3>{activeTrainer.name}</h3>
-            <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem' }}>
-              🏆 {activeTrainer.experienceYears} Years Exp &middot; {activeTrainer.clientSuccessCount || 'Expert Personal Trainer'}
-            </p>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem', flexWrap: 'wrap' }}>
+            {/* Trainer Profile Avatar */}
+            <div 
+              style={{
+                width: '80px', height: '80px', borderRadius: '50%',
+                overflow: 'hidden', border: '2px solid var(--primary-color)',
+                background: 'rgba(255,255,255,0.04)', display: 'flex',
+                alignItems: 'center', justifyContent: 'center',
+                boxShadow: '0 4px 20px rgba(0,0,0,0.2)', flexShrink: 0
+              }}
+            >
+              {activeTrainer.photo ? (
+                <img 
+                  src={activeTrainer.photo.startsWith('data:') || activeTrainer.photo.startsWith('http') ? activeTrainer.photo : `${import.meta.env.BASE_URL}${activeTrainer.photo}`} 
+                  alt={activeTrainer.name} 
+                  style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'top' }}
+                />
+              ) : (
+                <div style={{ fontSize: '2rem', color: 'var(--text-secondary)' }}>👤</div>
+              )}
+            </div>
+            <div>
+              <span style={{ color: 'var(--primary-color)', fontSize: '0.85rem', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                Staff & Coach Portal
+              </span>
+              <h3>{activeTrainer.name}</h3>
+              <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem' }}>
+                🏆 {activeTrainer.experienceYears} Years Exp &middot; {activeTrainer.clientSuccessCount || 'Expert Personal Trainer'}
+              </p>
+            </div>
           </div>
 
           {/* Switch coach / log out */}
@@ -1211,16 +1260,40 @@ export default function TrainerDashboard({ setActiveSection }) {
                         }}
                         onClick={() => handleSelectClient(member.email)}
                       >
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                          <div>
-                            <strong style={{ fontSize: '1.1rem', color: 'white' }}>{member.name}</strong>
-                            <span style={{ display: 'block', fontSize: '0.8rem', color: 'var(--text-secondary)', marginTop: '0.2rem' }}>
-                              {member.email}
-                            </span>
+                        <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
+                          {/* Client Photo */}
+                          <div 
+                            style={{
+                              width: '45px', height: '45px', borderRadius: '50%',
+                              overflow: 'hidden', border: '1px solid var(--border-color)',
+                              background: 'rgba(255,255,255,0.04)', display: 'flex',
+                              alignItems: 'center', justifyContent: 'center',
+                              flexShrink: 0
+                            }}
+                          >
+                            {member.photo ? (
+                              <img 
+                                src={member.photo} 
+                                alt={member.name} 
+                                style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                              />
+                            ) : (
+                              <div style={{ fontSize: '1.2rem', color: 'var(--text-secondary)' }}>👤</div>
+                            )}
                           </div>
-                          <span className="badge badge-primary" style={{ fontSize: '0.65rem' }}>
-                            {member.subscription}
-                          </span>
+                          <div style={{ flexGrow: 1 }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                              <div>
+                                <strong style={{ fontSize: '1.1rem', color: 'white' }}>{member.name}</strong>
+                                <span style={{ display: 'block', fontSize: '0.8rem', color: 'var(--text-secondary)', marginTop: '0.2rem' }}>
+                                  {member.email}
+                                </span>
+                              </div>
+                              <span className="badge badge-primary" style={{ fontSize: '0.65rem' }}>
+                                {member.subscription}
+                              </span>
+                            </div>
+                          </div>
                         </div>
                         
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '1rem', borderTop: '1px solid var(--border-color)', paddingTop: '0.75rem', fontSize: '0.85rem' }}>
@@ -1253,8 +1326,32 @@ export default function TrainerDashboard({ setActiveSection }) {
                       <span style={{ color: 'var(--primary-color)', fontSize: '0.75rem', fontWeight: '700', textTransform: 'uppercase' }}>
                         ASCA Training Builder
                       </span>
-                      <h3 style={{ color: 'white', marginTop: '0.25rem' }}>{selectedMember.name}</h3>
-                      <p style={{ color: 'var(--text-secondary)', fontSize: '0.85rem' }}>Set up structured exercises for client execution.</p>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginTop: '0.5rem' }}>
+                        {/* Client Photo */}
+                        <div 
+                          style={{
+                            width: '45px', height: '45px', borderRadius: '50%',
+                            overflow: 'hidden', border: '1px solid var(--primary-color)',
+                            background: 'rgba(255,255,255,0.04)', display: 'flex',
+                            alignItems: 'center', justifyContent: 'center',
+                            flexShrink: 0
+                          }}
+                        >
+                          {selectedMember.photo ? (
+                            <img 
+                              src={selectedMember.photo} 
+                              alt={selectedMember.name} 
+                              style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                            />
+                          ) : (
+                            <div style={{ fontSize: '1.2rem', color: 'var(--text-secondary)' }}>👤</div>
+                          )}
+                        </div>
+                        <div>
+                          <h3 style={{ color: 'white', margin: 0 }}>{selectedMember.name}</h3>
+                          <p style={{ color: 'var(--text-secondary)', fontSize: '0.85rem', margin: 0 }}>Set up structured exercises for client execution.</p>
+                        </div>
+                      </div>
                     </div>
 
                     {/* Exercise Table list */}
@@ -1773,29 +1870,72 @@ export default function TrainerDashboard({ setActiveSection }) {
                   </div>
                 </div>
 
-                <div className="grid-2" style={{ gap: '0.75rem', marginBottom: '0.75rem' }}>
-                  <div className="form-group" style={{ marginBottom: 0 }}>
-                    <label>Profile Image Name</label>
-                    <input 
-                      type="text" 
-                      className="form-control"
-                      value={profPhoto}
-                      onChange={(e) => setProfPhoto(e.target.value)}
-                      placeholder="e.g. coach_alex.png"
-                      required
-                    />
+                {/* Profile Photo Upload */}
+                <div className="form-group" style={{ marginBottom: '1.25rem' }}>
+                  <label>Profile Photo</label>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '1.25rem', flexWrap: 'wrap' }}>
+                    <div
+                      onClick={() => document.getElementById('trainer-photo-input').click()}
+                      style={{
+                        width: '90px', height: '90px', borderRadius: '50%',
+                        overflow: 'hidden', border: '2px dashed var(--primary-color)',
+                        cursor: 'pointer', flexShrink: 0, position: 'relative',
+                        background: 'rgba(255,255,255,0.04)', display: 'flex',
+                        alignItems: 'center', justifyContent: 'center'
+                      }}
+                    >
+                      {profPhoto ? (
+                        <img
+                          src={profPhoto.startsWith('data:') ? profPhoto : `${import.meta.env.BASE_URL}${profPhoto}`}
+                          alt="Profile preview"
+                          style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'top' }}
+                        />
+                      ) : (
+                        <span style={{ fontSize: '1.75rem' }}>📷</span>
+                      )}
+                      <div style={{
+                        position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.45)',
+                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        opacity: 0, transition: 'opacity 0.2s'
+                      }}
+                        onMouseEnter={e => e.currentTarget.style.opacity = 1}
+                        onMouseLeave={e => e.currentTarget.style.opacity = 0}
+                      >
+                        <span style={{ color: 'white', fontSize: '0.7rem', fontWeight: '700' }}>CHANGE</span>
+                      </div>
+                    </div>
+                    <div>
+                      <input
+                        id="trainer-photo-input"
+                        type="file" accept="image/*"
+                        style={{ display: 'none' }}
+                        onChange={handleTrainerPhotoUpload}
+                      />
+                      <button
+                        type="button"
+                        className="btn btn-secondary"
+                        style={{ padding: '0.5rem 1.1rem', fontSize: '0.82rem' }}
+                        onClick={() => document.getElementById('trainer-photo-input').click()}
+                        disabled={profPhotoUploading}
+                      >
+                        {profPhotoUploading ? '⏳ Processing...' : '📤 Upload Photo'}
+                      </button>
+                      <p style={{ color: 'var(--text-secondary)', fontSize: '0.72rem', marginTop: '0.4rem' }}>
+                        JPG / PNG · Auto-compressed · Updates live on trainer cards
+                      </p>
+                    </div>
                   </div>
-                  <div className="form-group" style={{ marginBottom: 0 }}>
-                    <label>Instagram Username</label>
-                    <input 
-                      type="text" 
-                      className="form-control"
-                      value={profInsta}
-                      onChange={(e) => setProfInsta(e.target.value)}
-                      placeholder="e.g. coach_insta"
-                      required
-                    />
-                  </div>
+                </div>
+
+                <div className="form-group" style={{ marginBottom: '0.75rem' }}>
+                  <label>Instagram Username</label>
+                  <input
+                    type="text"
+                    className="form-control"
+                    value={profInsta}
+                    onChange={(e) => setProfInsta(e.target.value)}
+                    placeholder="e.g. coach_insta"
+                  />
                 </div>
 
                 <div className="form-group">
