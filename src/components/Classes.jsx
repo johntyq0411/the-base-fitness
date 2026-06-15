@@ -619,8 +619,10 @@ export default function Classes({ setActiveSection, isHomepage }) {
 
   if (!isHomepage && isMobile) {
     const mobileDates = getMobileDates();
+    const activeDayItem = mobileDates.find(d => d.dateKey === selectedDay);
+    const activeDayName = activeDayItem ? activeDayItem.dayName : '';
     const mobileClassesForDay = filteredClasses
-      .filter(c => c.day === selectedDay)
+      .filter(c => c.day === activeDayName)
       .sort((a, b) => parseTimeToMinutes(a.time) - parseTimeToMinutes(b.time));
 
     return (
