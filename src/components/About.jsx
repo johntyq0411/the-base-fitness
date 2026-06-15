@@ -25,7 +25,8 @@ export default function About() {
       subtitle: '3D AI Posture & Body Composition Analyzer',
       desc: 'Ditch the standard scales. The advanced commercial-grade Anovator A5 health assessment station delivers a full diagnostic profile in under 5 minutes: AI 3D posture risk analysis (scoliosis, pelvic tilt), 8-electrode BIA (segmental muscle & fat mass, BMR), clinical vitals (blood pressure, SpO2), and balance/mobility testing.',
       image: 'anovator_a5.png',
-      badge: 'Advanced Diagnostics'
+      badge: 'Advanced Diagnostics',
+      salesBadge: 'Authorized Sales Agent — Purchase Inquiries Welcome'
     },
     {
       title: 'Modern Training Environment',
@@ -102,9 +103,28 @@ export default function About() {
               <h4 style={{ fontSize: '1.1rem', color: '#94a3b8', marginBottom: '1.25rem', fontWeight: '500' }}>
                 {competencies[activeSlide].subtitle}
               </h4>
-              <p style={{ color: 'var(--text-secondary)', fontSize: '0.95rem', lineHeight: '1.7', marginBottom: '2rem' }}>
+              <p style={{ color: 'var(--text-secondary)', fontSize: '0.95rem', lineHeight: '1.7', marginBottom: competencies[activeSlide].salesBadge ? '1rem' : '2rem' }}>
                 {competencies[activeSlide].desc}
               </p>
+
+              {competencies[activeSlide].salesBadge && (
+                <div style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '0.5rem',
+                  backgroundColor: 'rgba(220, 38, 38, 0.08)',
+                  border: '1px solid rgba(220, 38, 38, 0.25)',
+                  padding: '0.5rem 1.25rem',
+                  borderRadius: '8px',
+                  color: 'var(--primary-color)',
+                  fontSize: '0.82rem',
+                  fontWeight: '700',
+                  marginBottom: '1.5rem',
+                  width: 'fit-content'
+                }}>
+                  🏷️ {competencies[activeSlide].salesBadge}
+                </div>
+              )}
 
               {/* Navigation Arrows inside Text Column for better control layout */}
               <div style={{ display: 'flex', gap: '1rem', marginTop: 'auto' }}>

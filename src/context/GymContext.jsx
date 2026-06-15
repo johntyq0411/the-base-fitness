@@ -125,6 +125,20 @@ const DEFAULT_SUPPLEMENTS = [
     highlights: ['All 9 Essential Amino Acids', 'Full Spectrum EAA Profile', 'Supports Muscle Synthesis', 'Anti-Catabolism'],
     flavors: ['Watermelon', 'Orange Mango', 'Grape'],
     visible: true
+  },
+  {
+    id: 'eq1',
+    name: 'Anovator A5 Health Assessment Station',
+    category: 'Health Tech',
+    categoryKey: 'tech',
+    image: 'anovator_a5.png',
+    price: 18500,
+    weight: '38 kg (83.7 lbs)',
+    servings: 1,
+    description: 'The premium clinical-grade body composition and posture analysis station. Delivers a complete diagnostics report in under 5 minutes: AI 3D posture risk analysis, 8-electrode segmental body composition (BIA), clinical blood pressure, SpO2, and balance metrics. Perfect for clinics, professional training centers, and gym setups.',
+    highlights: ['AI 3D Posture & Risk Scan', '8-Electrode Segmental BIA', 'Clinical Vitals (BP & SpO2)', 'Ideal for Gyms, Clinics, Physio'],
+    flavors: ['Standard Dual-Tone'],
+    visible: true
   }
 ];
 
