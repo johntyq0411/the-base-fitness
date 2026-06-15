@@ -47,14 +47,14 @@ const DEFAULT_SUPPLEMENTS = [
     name: 'MUTANT WHEY™',
     category: 'Whey Protein',
     categoryKey: 'whey',
-    image: '21052EX_MUTANT_WHEY_Triple_Chocolate_Flavour_2.27_kg_5_lb_v2.00-L-L3.jpg',
+    image: '21052EX_MUTANT_WHEY_Triple_Chocolate_Flavour_2.27_kg_5_lb_v2.00-L-L3.png',
     images: [
-      { src: '21052EX_MUTANT_WHEY_Triple_Chocolate_Flavour_2.27_kg_5_lb_v2.00-L-L3.jpg', label: 'Triple Chocolate Front', flavor: 'Triple Chocolate' },
-      { src: '21051EX_MUTANT_WHEY_Vanilla_Ice_Cream_Flavour_2.27_kg_5_lb_v2.00-L3.jpg', label: 'Vanilla Ice Cream Front', flavor: 'Vanilla Ice Cream' },
-      { src: '21053EX_MUTANT_WHEY_Cookies_Cream_Flavour_2.27_kg_5_lb_v2.00-L3.jpg', label: 'Cookies & Cream Front', flavor: 'Cookies & Cream' },
-      { src: '21054EX_MUTANT_WHEY_Strawberry_Cream_Flavour_2.27_kg_5_lb_v2.00-L3.jpg', label: 'Strawberry Cream Front', flavor: 'Strawberry Cream' },
-      { src: '21055EX_MUTANT_WHEY_Chocolate_Fudge_Brownie_Flavour_2.27_kg_5_lb_v2.00-L3.jpg', label: 'Chocolate Fudge Brownie Front', flavor: 'Chocolate Fudge Brownie' },
-      { src: '21052EX_MUTANT_WHEY_back.jpg', label: 'Nutrition Facts Back' }
+      { src: '21052EX_MUTANT_WHEY_Triple_Chocolate_Flavour_2.27_kg_5_lb_v2.00-L-L3.png', label: 'Triple Chocolate Front', flavor: 'Triple Chocolate' },
+      { src: '21051EX_MUTANT_WHEY_Vanilla_Ice_Cream_Flavour_2.27_kg_5_lb_v2.00-L3.png', label: 'Vanilla Ice Cream Front', flavor: 'Vanilla Ice Cream' },
+      { src: '21053EX_MUTANT_WHEY_Cookies_Cream_Flavour_2.27_kg_5_lb_v2.00-L3.png', label: 'Cookies & Cream Front', flavor: 'Cookies & Cream' },
+      { src: '21054EX_MUTANT_WHEY_Strawberry_Cream_Flavour_2.27_kg_5_lb_v2.00-L3.png', label: 'Strawberry Cream Front', flavor: 'Strawberry Cream' },
+      { src: '21055EX_MUTANT_WHEY_Chocolate_Fudge_Brownie_Flavour_2.27_kg_5_lb_v2.00-L3.png', label: 'Chocolate Fudge Brownie Front', flavor: 'Chocolate Fudge Brownie' },
+      { src: '21052EX_MUTANT_WHEY_back.png', label: 'Nutrition Facts Back' }
     ],
     price: 179,
     weight: '2.27 kg (5 lbs)',
@@ -69,10 +69,10 @@ const DEFAULT_SUPPLEMENTS = [
     name: 'MUTANT MASS®',
     category: 'Mass Gainer',
     categoryKey: 'mass',
-    image: '21502EXMUTANTMASSTripleChocolateFlavour2.27KG_5LB_v2.00-L3.jpg',
+    image: '21502EXMUTANTMASSTripleChocolateFlavour2.27KG_5LB_v2.00-L3.png',
     images: [
-      { src: '21502EXMUTANTMASSTripleChocolateFlavour2.27KG_5LB_v2.00-L3.jpg', label: 'Triple Chocolate Front', flavor: 'Triple Chocolate' },
-      { src: '21502EX_MUTANT_MASS_back.jpg', label: 'Nutrition Facts Back' }
+      { src: '21502EXMUTANTMASSTripleChocolateFlavour2.27KG_5LB_v2.00-L3.png', label: 'Triple Chocolate Front', flavor: 'Triple Chocolate' },
+      { src: '21502EX_MUTANT_MASS_back.png', label: 'Nutrition Facts Back' }
     ],
     price: 249,
     weight: '6.8 kg (15 lbs)',
@@ -87,11 +87,11 @@ const DEFAULT_SUPPLEMENTS = [
     name: 'MUTANT CREAKONG® CX8',
     category: 'Creatine',
     categoryKey: 'creatine',
-    image: '34053US_MUTANT_CREATINE_Unflavored_300g_10.6oz_v2.00-L3.jpg',
+    image: '34053US_MUTANT_CREATINE_Unflavored_300g_10.6oz_v2.00-L3.png',
     images: [
-      { src: '34053US_MUTANT_CREATINE_Unflavored_300g_10.6oz_v2.00-L3.jpg', label: 'Unflavored Front', flavor: 'Unflavored' },
-      { src: '34053US_MUTANT_CREATINE_side1.jpg', label: 'Side Directions 1' },
-      { src: '34053US_MUTANT_CREATINE_side2.jpg', label: 'Side Warnings 2' }
+      { src: '34053US_MUTANT_CREATINE_Unflavored_300g_10.6oz_v2.00-L3.png', label: 'Unflavored Front', flavor: 'Unflavored' },
+      { src: '34053US_MUTANT_CREATINE_side1.png', label: 'Side Directions 1' },
+      { src: '34053US_MUTANT_CREATINE_side2.png', label: 'Side Warnings 2' }
     ],
     price: 99,
     weight: '300g',
@@ -106,17 +106,17 @@ const DEFAULT_SUPPLEMENTS = [
     name: 'MUTANT ISO SURGE™',
     category: 'Iso Protein',
     categoryKey: 'iso',
-    image: '20052EXMUTANTHARDCOREISOTripleChocolateFlavour2.27KG_5LB_v2.10_NS-L3_1.jpg',
+    image: '20052EXMUTANTHARDCOREISOTripleChocolateFlavour2.27KG_5LB_v2.10_NS-L3_1.png',
     images: [
-      { src: '20052EXMUTANTHARDCOREISOTripleChocolateFlavour2.27KG_5LB_v2.10_NS-L3_1.jpg', label: 'Triple Chocolate Front', flavor: 'Triple Chocolate' },
-      { src: '20051EXMUTANTHARDCOREISOVanillaIceCreamFlavour2.27KG_5LB_v2.10_NS-L3_1.jpg', label: 'Vanilla Ice Cream Front', flavor: 'Vanilla Ice Cream' },
-      { src: '20054EXMUTANTHARDCOREISOStrawberryMilkshakeFlavour2.27KG_5LB_v2.10_NS-L3_1.jpg', label: 'Strawberry Milkshake Front', flavor: 'Strawberry Milkshake' },
-      { src: '20055EXMUTANTHARDCOREISOPeanutButterChocolateFlavour2.27KG_5LB_v2.10_NS-L3_2.jpg', label: 'Peanut Butter Chocolate Front', flavor: 'Peanut Butter Chocolate' },
-      { src: '20056EXMUTANTHARDCOREISOMintChocolateChipIceCreamFlavour2.27KG_5LB_v2.10_NS-L3_2.jpg', label: 'Mint Chocolate Chip Front', flavor: 'Mint Chocolate Chip' },
-      { src: '20058EXMUTANTHARDCOREISOBananaCreamFlavour2.27KG_5LB_v2.10_NS-L3_2.jpg', label: 'Banana Cream Front', flavor: 'Banana Cream' },
-      { src: '20060EXMUTANTHARDCOREISOChocolateFudgeBrownieFlavour2.27KG_5LB_v2.10_NS-L3_2.jpg', label: 'Chocolate Fudge Brownie Front', flavor: 'Chocolate Fudge Brownie' },
-      { src: '20051EXMUTANTHARDCOREISOside1.jpg', label: 'Side Panel 1' },
-      { src: '20051EXMUTANTHARDCOREISOSide2.jpg', label: 'Side Panel 2' }
+      { src: '20052EXMUTANTHARDCOREISOTripleChocolateFlavour2.27KG_5LB_v2.10_NS-L3_1.png', label: 'Triple Chocolate Front', flavor: 'Triple Chocolate' },
+      { src: '20051EXMUTANTHARDCOREISOVanillaIceCreamFlavour2.27KG_5LB_v2.10_NS-L3_1.png', label: 'Vanilla Ice Cream Front', flavor: 'Vanilla Ice Cream' },
+      { src: '20054EXMUTANTHARDCOREISOStrawberryMilkshakeFlavour2.27KG_5LB_v2.10_NS-L3_1.png', label: 'Strawberry Milkshake Front', flavor: 'Strawberry Milkshake' },
+      { src: '20055EXMUTANTHARDCOREISOPeanutButterChocolateFlavour2.27KG_5LB_v2.10_NS-L3_2.png', label: 'Peanut Butter Chocolate Front', flavor: 'Peanut Butter Chocolate' },
+      { src: '20056EXMUTANTHARDCOREISOMintChocolateChipIceCreamFlavour2.27KG_5LB_v2.10_NS-L3_2.png', label: 'Mint Chocolate Chip Front', flavor: 'Mint Chocolate Chip' },
+      { src: '20058EXMUTANTHARDCOREISOBananaCreamFlavour2.27KG_5LB_v2.10_NS-L3_2.png', label: 'Banana Cream Front', flavor: 'Banana Cream' },
+      { src: '20060EXMUTANTHARDCOREISOChocolateFudgeBrownieFlavour2.27KG_5LB_v2.10_NS-L3_2.png', label: 'Chocolate Fudge Brownie Front', flavor: 'Chocolate Fudge Brownie' },
+      { src: '20051EXMUTANTHARDCOREISOside1.png', label: 'Side Panel 1' },
+      { src: '20051EXMUTANTHARDCOREISOSide2.png', label: 'Side Panel 2' }
     ],
     price: 199,
     weight: '1.6 kg (3.5 lbs)',
@@ -131,16 +131,16 @@ const DEFAULT_SUPPLEMENTS = [
     name: 'MUTANT BCAA 9.7™',
     category: 'BCAA',
     categoryKey: 'bcaa',
-    image: '34303US_MUTANT_HARDCORE_BCAA_Watermelon_Flavor_390g_13.8oz_v2.00-L3_ca1d231d-1116-4d32-a505-efc36fd155b7.jpg',
+    image: '34303US_MUTANT_HARDCORE_BCAA_Watermelon_Flavor_390g_13.8oz_v2.00-L3_ca1d231d-1116-4d32-a505-efc36fd155b7.png',
     images: [
-      { src: '34303US_MUTANT_HARDCORE_BCAA_Watermelon_Flavor_390g_13.8oz_v2.00-L3_ca1d231d-1116-4d32-a505-efc36fd155b7.jpg', label: 'Watermelon Front', flavor: 'Watermelon' },
-      { src: '34301US_MUTANT_HARDCORE_BCAA_Fruit_Punch_Flavor_390g_13.8oz_v2.00-L3_66885f45-95cb-43f4-9925-55c523119271.jpg', label: 'Fruit Punch Front', flavor: 'Fruit Punch' },
-      { src: '34306US_MUTANT_HARDCORE_BCAA_Peach_Flavor_390g_13.8oz_v2.00-L3.jpg', label: 'Peach Front', flavor: 'Peach' },
-      { src: '34307US_MUTANT_HARDCORE_BCAA_Pineapple_Flavor_390g_13.8oz_v2.00-L3.jpg', label: 'Pineapple Front', flavor: 'Pineapple' },
-      { src: '34308US_MUTANT_HARDCORE_BCAA_Lemonade_Flavor_390g_13.8oz_v2.00-L3_0b7b5e8d-e2c0-4f1b-b33d-9bfcd20a5536.jpg', label: 'Lemonade Front', flavor: 'Lemonade' },
-      { src: '34312US_MUTANT_HARDCORE_BCAA_Mango_Flavor_390g_13.8oz_v2.00-L3_b5012e12-c828-4ebd-a3a6-edb54b0f3958.jpg', label: 'Mango Front', flavor: 'Mango' },
-      { src: '34316US_MUTANT_HARDCORE_BCAA_Grape_Flavor_390g_13.8oz_v2.00-L3.jpg', label: 'Grape Front', flavor: 'Grape' },
-      { src: '34306US_MUTANT_HARDCORE_BCAABack.jpg', label: 'Nutrition Facts Back' }
+      { src: '34303US_MUTANT_HARDCORE_BCAA_Watermelon_Flavor_390g_13.8oz_v2.00-L3_ca1d231d-1116-4d32-a505-efc36fd155b7.png', label: 'Watermelon Front', flavor: 'Watermelon' },
+      { src: '34301US_MUTANT_HARDCORE_BCAA_Fruit_Punch_Flavor_390g_13.8oz_v2.00-L3_66885f45-95cb-43f4-9925-55c523119271.png', label: 'Fruit Punch Front', flavor: 'Fruit Punch' },
+      { src: '34306US_MUTANT_HARDCORE_BCAA_Peach_Flavor_390g_13.8oz_v2.00-L3.png', label: 'Peach Front', flavor: 'Peach' },
+      { src: '34307US_MUTANT_HARDCORE_BCAA_Pineapple_Flavor_390g_13.8oz_v2.00-L3.png', label: 'Pineapple Front', flavor: 'Pineapple' },
+      { src: '34308US_MUTANT_HARDCORE_BCAA_Lemonade_Flavor_390g_13.8oz_v2.00-L3_0b7b5e8d-e2c0-4f1b-b33d-9bfcd20a5536.png', label: 'Lemonade Front', flavor: 'Lemonade' },
+      { src: '34312US_MUTANT_HARDCORE_BCAA_Mango_Flavor_390g_13.8oz_v2.00-L3_b5012e12-c828-4ebd-a3a6-edb54b0f3958.png', label: 'Mango Front', flavor: 'Mango' },
+      { src: '34316US_MUTANT_HARDCORE_BCAA_Grape_Flavor_390g_13.8oz_v2.00-L3.png', label: 'Grape Front', flavor: 'Grape' },
+      { src: '34306US_MUTANT_HARDCORE_BCAABack.png', label: 'Nutrition Facts Back' }
     ],
     price: 99,
     weight: '348g',
@@ -155,14 +155,14 @@ const DEFAULT_SUPPLEMENTS = [
     name: 'MUTANT EAA™',
     category: 'EAA',
     categoryKey: 'eaa',
-    image: '22201EXMUTANTGEAARTropicalPunchFlavour420g_14.8oz_v2.00-L3.jpg',
+    image: '22201EXMUTANTGEAARTropicalPunchFlavour420g_14.8oz_v2.00-L3.png',
     images: [
-      { src: '22201EXMUTANTGEAARTropicalPunchFlavour420g_14.8oz_v2.00-L3.jpg', label: 'Tropical Punch Front', flavor: 'Tropical Punch' },
-      { src: '22202EX_MUTANT_GEAAR_Peach_Mango_Flavour_420g_14.8_oz_v2.00-L3.jpg', label: 'Peach Mango Front', flavor: 'Peach Mango' },
-      { src: '22203EX_MUTANT_GEAAR_Blue_Raspberry_Flavour_420g_14.8_oz_v2.00-L3.jpg', label: 'Blue Raspberry Front', flavor: 'Blue Raspberry' },
-      { src: '22204EX_MUTANT_GEAAR_Sweet_Iced_Tea_Flavour_420g_14.8_oz_v2.00-L3_a9ec03db-ba18-4e17-a3b4-c2df06f5ea27.jpg', label: 'Sweet Iced Tea Front', flavor: 'Sweet Iced Tea' },
-      { src: '22201EX_MUTANT_GEAAR_side1.jpg', label: 'Side Ingredients 1' },
-      { src: '22201EX_MUTANT_GEAAR_side2.jpg', label: 'Side Nutrition 2' }
+      { src: '22201EXMUTANTGEAARTropicalPunchFlavour420g_14.8oz_v2.00-L3.png', label: 'Tropical Punch Front', flavor: 'Tropical Punch' },
+      { src: '22202EX_MUTANT_GEAAR_Peach_Mango_Flavour_420g_14.8_oz_v2.00-L3.png', label: 'Peach Mango Front', flavor: 'Peach Mango' },
+      { src: '22203EX_MUTANT_GEAAR_Blue_Raspberry_Flavour_420g_14.8_oz_v2.00-L3.png', label: 'Blue Raspberry Front', flavor: 'Blue Raspberry' },
+      { src: '22204EX_MUTANT_GEAAR_Sweet_Iced_Tea_Flavour_420g_14.8_oz_v2.00-L3_a9ec03db-ba18-4e17-a3b4-c2df06f5ea27.png', label: 'Sweet Iced Tea Front', flavor: 'Sweet Iced Tea' },
+      { src: '22201EX_MUTANT_GEAAR_side1.png', label: 'Side Ingredients 1' },
+      { src: '22201EX_MUTANT_GEAAR_side2.png', label: 'Side Nutrition 2' }
     ],
     price: 109,
     weight: '390g',
@@ -365,6 +365,18 @@ export const addOneHour = (timeStr) => {
   return `${String(displayHours).padStart(2, '0')}:${displayMins} ${ampm}`;
 };
 
+// Add 30 minutes to a time string (e.g. "10:00 AM" -> "10:30 AM")
+export const addHalfHour = (timeStr) => {
+  const mins = parseTimeToMinutes(timeStr);
+  const newMins = mins + 30;
+  const hours = Math.floor(newMins / 60) % 24;
+  const minutes = newMins % 60;
+  const ampm = hours >= 12 ? 'PM' : 'AM';
+  const displayHours = hours % 12 === 0 ? 12 : hours % 12;
+  const displayMins = String(minutes).padStart(2, '0');
+  return `${String(displayHours).padStart(2, '0')}:${displayMins} ${ampm}`;
+};
+
 export const isTimeRangeOverlapping = (start1, end1, start2, end2) => {
   const s1 = parseTimeToMinutes(start1);
   const e1 = parseTimeToMinutes(end1);
@@ -559,10 +571,10 @@ export const GymProvider = ({ children }) => {
     if (saved) {
       try {
         const parsed = JSON.parse(saved);
-        // Force refresh catalog if it contains old webp or png generated placeholder images
+        // Force refresh catalog if it contains old webp/jpg or png generated placeholder images
         const hasOldImages = parsed.some(p => {
-          if (p.image && (p.image.endsWith('.webp') || p.image.includes('mutant_'))) return true;
-          if (p.images && p.images.some(img => img.src.endsWith('.webp') || img.src.includes('mutant_'))) return true;
+          if (p.image && (p.image.endsWith('.webp') || p.image.endsWith('.jpg') || p.image.includes('mutant_'))) return true;
+          if (p.images && p.images.some(img => img.src.endsWith('.webp') || img.src.endsWith('.jpg') || img.src.includes('mutant_'))) return true;
           return false;
         });
         if (!hasOldImages) {
@@ -579,6 +591,12 @@ export const GymProvider = ({ children }) => {
   const [supplementDiscounts, setSupplementDiscounts] = useState(() => {
     const saved = localStorage.getItem('bf_v3_supp_discounts');
     return saved ? JSON.parse(saved) : DEFAULT_SUPPLEMENT_DISCOUNTS;
+  });
+
+  // New state for Anovator A5 scan requests
+  const [anovatorRequests, setAnovatorRequests] = useState(() => {
+    const stored = localStorage.getItem('bf_v3_anovator_requests');
+    return stored ? JSON.parse(stored) : [];
   });
 
   // Synchronize state with LocalStorage and update theme
@@ -631,6 +649,10 @@ export const GymProvider = ({ children }) => {
   useEffect(() => {
     localStorage.setItem('bf_v3_supp_discounts', JSON.stringify(supplementDiscounts));
   }, [supplementDiscounts]);
+
+  useEffect(() => {
+    localStorage.setItem('bf_v3_anovator_requests', JSON.stringify(anovatorRequests));
+  }, [anovatorRequests]);
 
   // Auth Operations (Simulated)
   const login = (email, role) => {
@@ -1116,6 +1138,128 @@ export const GymProvider = ({ children }) => {
     return true;
   };
 
+  // ── Anovator A5 Scan Booking Functions ──
+
+  // Member requests a scan slot
+  const requestAnovatorScan = (date, time, notes) => {
+    if (currentUser.role !== 'member') {
+      alert('Please sign in as a Member to book an Anovator scan.');
+      return false;
+    }
+
+    const memberProfile = members.find(m => m.email.toLowerCase() === currentUser.email.toLowerCase());
+    if (!memberProfile || !memberProfile.subscription) {
+      alert('Active subscription required to book an Anovator scan. Please purchase a membership package first!');
+      return false;
+    }
+
+    // Determine target trainer
+    let assignedTrainerId = null;
+    let assignedTrainerName = null;
+    if (memberProfile.trainer && memberProfile.trainer !== 'Pending Assignment') {
+      const coach = trainers.find(t => t.name.toLowerCase() === memberProfile.trainer.toLowerCase());
+      if (coach) {
+        assignedTrainerId = coach.id;
+        assignedTrainerName = coach.name;
+      }
+    }
+
+    // Calculate end time (30 min scan)
+    const endTime = addHalfHour(time);
+
+    // Check for duplicate pending/accepted request on the same date
+    const hasDuplicate = anovatorRequests.some(
+      r => r.memberEmail.toLowerCase() === currentUser.email.toLowerCase() &&
+           r.date === date &&
+           r.status !== 'rejected' &&
+           isTimeRangeOverlapping(r.startTime, r.endTime, time, endTime)
+    );
+    if (hasDuplicate) {
+      alert('You already have a scan request for this time slot.');
+      return false;
+    }
+
+    const newRequest = {
+      id: 'anov_' + Date.now(),
+      memberEmail: currentUser.email,
+      memberName: memberProfile.name,
+      date,
+      startTime: time,
+      endTime,
+      notes: notes || '',
+      status: 'pending',
+      assignedTrainerId,
+      assignedTrainerName,
+      acceptedByTrainerId: null,
+      acceptedByTrainerName: null,
+      createdAt: new Date().toISOString()
+    };
+
+    setAnovatorRequests(prev => [...prev, newRequest]);
+    if (assignedTrainerName) {
+      alert(`Scan request submitted! Your trainer ${assignedTrainerName} will review and accept the slot.`);
+    } else {
+      alert('Scan request submitted! Any available trainer will review and accept the slot.');
+    }
+    return true;
+  };
+
+  // Trainer accepts a scan request
+  const acceptAnovatorRequest = (requestId, trainerId) => {
+    const coach = trainers.find(t => t.id === trainerId);
+    if (!coach) return false;
+
+    const request = anovatorRequests.find(r => r.id === requestId);
+    if (!request || request.status !== 'pending') return false;
+
+    // Check trainer availability – overlap with existing blocks
+    const isBlocked = trainerBlocks.some(
+      b => b.trainerId === trainerId && matchesDay(b.day, request.date) &&
+        isTimeRangeOverlapping(b.startTime || b.time, b.endTime || addOneHour(b.startTime || b.time), request.startTime, request.endTime)
+    );
+    if (isBlocked) {
+      alert('You have a conflicting block at this time. Cannot accept.');
+      return false;
+    }
+
+    // Check overlap with PT bookings
+    const isPtBooked = ptBookings.some(
+      b => b.trainerId === trainerId && matchesDay(b.day, request.date) &&
+        isTimeRangeOverlapping(b.time, addOneHour(b.time), request.startTime, request.endTime)
+    );
+    if (isPtBooked) {
+      alert('You have a PT session booked at this time. Cannot accept.');
+      return false;
+    }
+
+    // Mark request as accepted
+    setAnovatorRequests(prev => prev.map(r => {
+      if (r.id === requestId) {
+        return {
+          ...r,
+          status: 'accepted',
+          acceptedByTrainerId: trainerId,
+          acceptedByTrainerName: coach.name
+        };
+      }
+      return r;
+    }));
+
+    // Block the slot on trainer calendar
+    const blockResult = addTrainerBlock(
+      trainerId,
+      request.date,
+      request.startTime,
+      request.endTime,
+      'anovator_scan',
+      `Anovator Scan – ${request.memberName}`,
+      `Anovator A5 Health Assessment for ${request.memberName}`
+    );
+
+    alert(`Accepted! Anovator scan for ${request.memberName} on ${request.date} at ${request.startTime} is now confirmed.`);
+    return true;
+  };
+
   // Reset to default settings
   const resetToDefault = () => {
     if (window.confirm('Are you sure you want to reset all configurations to default? This will clear bookings, subscriptions, and customized packages.')) {
@@ -1128,6 +1272,7 @@ export const GymProvider = ({ children }) => {
       localStorage.removeItem('bf_v3_trainer_blocks');
       localStorage.removeItem('bf_v3_trial_bookings');
       localStorage.removeItem('bf_v3_supplements');
+      localStorage.removeItem('bf_v3_anovator_requests');
       localStorage.removeItem('bf_v3_supp_discounts');
       
       setGymSettings(DEFAULT_GYM_SETTINGS);
@@ -1210,6 +1355,7 @@ export const GymProvider = ({ children }) => {
       setCurrentUser({ email: null, role: 'guest', name: 'Guest' });
       setSupplements(DEFAULT_SUPPLEMENTS);
       setSupplementDiscounts(DEFAULT_SUPPLEMENT_DISCOUNTS);
+      setAnovatorRequests([]);
       
       window.location.reload();
     }
@@ -1259,6 +1405,11 @@ export const GymProvider = ({ children }) => {
       supplementDiscounts,
       setSupplementDiscounts,
       removeTrainerBlock,
+      anovatorRequests,
+      setAnovatorRequests,
+      requestAnovatorScan,
+      acceptAnovatorRequest,
+      addHalfHour,
       resetToDefault
     }}>
       {children}

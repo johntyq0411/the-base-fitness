@@ -67,7 +67,9 @@ export default function MemberDashboard({ setActiveSection }) {
     trainerBlocks,
     isTimeRangeOverlapping,
     addOneHour,
-    matchesDay
+    matchesDay,
+    anovatorRequests,
+    requestAnovatorScan
   } = useContext(GymContext);
 
   const [photoUploading, setPhotoUploading] = useState(false);
@@ -151,6 +153,21 @@ export default function MemberDashboard({ setActiveSection }) {
     return daysList.length > 0 ? daysList[0].dateKey : '';
   });
   const [ptTime, setPtTime] = useState('10:00 AM');
+
+  // Anovator A5 scan booking state
+  const [showScanModal, setShowScanModal] = useState(false);
+  const [scanDate, setScanDate] = useState(() => {
+    const d = new Date();
+    d.setDate(d.getDate() + 1);
+    return d.toISOString().split('T')[0];
+  });
+  const [scanTime, setScanTime] = useState('10:00 AM');
+  const [scanNotes, setScanNotes] = useState('');
+
+  // Filter scan requests for this member
+  const memberScanRequests = anovatorRequests.filter(
+    r => r.memberEmail.toLowerCase() === currentUser.email.toLowerCase()
+  );
 
   // Find assigned coach details
   const assignedCoach = trainers.find(t => t.name.toLowerCase() === (profile.trainer || '').toLowerCase());
@@ -667,6 +684,190 @@ export default function MemberDashboard({ setActiveSection }) {
               </div>
             )}
           </div>
+
+        {/* ─── Anovator A5 Health Assessment Section ─── */}
+        {profile.subscription && (
+          <div style={{ marginTop: '2.5rem' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', flexWrap: 'wrap', gap: '1rem' }}>
+              <h3 style={{ fontSize: '1.5rem', fontFamily: 'var(--font-display)' }}>🩺 Anovator A5 Health Assessment</h3>
+              <button 
+                className="btn btn-primary" 
+                style={{ 
+                  padding: '0.6rem 1.4rem', 
+                  fontSize: '0.85rem', 
+                  fontWeight: '700', 
+                  borderRadius: '10px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.5rem',
+                  background: 'linear-gradient(135deg, var(--primary-color) 0%, #f97316 100%)',
+                  border: 'none',
+                  boxShadow: '0 4px 15px rgba(220, 38, 38, 0.3)'
+                }}
+                onClick={() => setShowScanModal(true)}
+              >
+                📋 Book Anovator A5 Health Assessment
+              </button>
+            </div>
+
+            <div style={{ 
+              background: 'linear-gradient(135deg, rgba(6,182,212,0.05) 0%, rgba(249,115,22,0.05) 100%)',
+              border: '1px solid rgba(6,182,212,0.2)',
+              borderRadius: '12px',
+              padding: '1rem 1.25rem',
+              marginBottom: '1.5rem',
+              fontSize: '0.8rem',
+              color: 'var(--text-secondary)',
+              lineHeight: '1.5'
+            }}>
+              💡 <strong style={{ color: 'white' }}>How it works:</strong> Book a 30-minute full body scan session. 
+              {profile.trainer && profile.trainer !== 'Pending Assignment' 
+                ? <> Your request will be sent to <strong style={{ color: '#06b6d4' }}>{profile.trainer}</strong> for acceptance.</>
+                : <> Your request will be visible to all available trainers. Once a trainer accepts, your slot is confirmed.</>}
+            </div>
+
+            {/* Scan Requests List */}
+            {memberScanRequests.length > 0 ? (
+              <div className="list-table-container">
+                <table className="list-table">
+                  <thead>
+                    <tr>
+                      <th>Date</th>
+                      <th>Time</th>
+                      <th>Status</th>
+                      <th>Trainer</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {memberScanRequests.map(r => (
+                      <tr key={r.id}>
+                        <td data-label="Date">
+                          <strong>{getFormattedDateFromKey(r.date)}</strong>
+                        </td>
+                        <td data-label="Time">
+                          {r.startTime} – {r.endTime}
+                        </td>
+                        <td data-label="Status">
+                          {r.status === 'pending' ? (
+                            <span className="badge" style={{ backgroundColor: 'rgba(251, 191, 36, 0.15)', color: '#fbbf24', fontSize: '0.7rem', padding: '0.2rem 0.5rem' }}>⏳ Pending Approval</span>
+                          ) : r.status === 'accepted' ? (
+                            <span className="badge" style={{ backgroundColor: 'rgba(16, 185, 129, 0.15)', color: '#10b981', fontSize: '0.7rem', padding: '0.2rem 0.5rem' }}>✅ Confirmed</span>
+                          ) : (
+                            <span className="badge" style={{ backgroundColor: 'rgba(239, 68, 68, 0.15)', color: '#ef4444', fontSize: '0.7rem', padding: '0.2rem 0.5rem' }}>❌ {r.status}</span>
+                          )}
+                        </td>
+                        <td data-label="Trainer">
+                          {r.acceptedByTrainerName 
+                            ? <strong style={{ color: '#10b981' }}>{r.acceptedByTrainerName}</strong>
+                            : r.assignedTrainerName 
+                              ? <span style={{ color: 'var(--text-secondary)' }}>Assigned: {r.assignedTrainerName}</span>
+                              : <span style={{ color: 'var(--text-secondary)' }}>Any Available</span>}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            ) : (
+              <div style={{ backgroundColor: 'var(--bg-card)', border: '1px solid var(--border-color)', borderRadius: '1rem', padding: '2.5rem', textAlign: 'center', color: 'var(--text-secondary)' }}>
+                <div style={{ fontSize: '2rem', marginBottom: '0.75rem' }}>🔬</div>
+                <p>No scan sessions booked yet. Click the button above to schedule your first Anovator A5 Health Assessment!</p>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Anovator Scan Booking Modal */}
+        {showScanModal && (
+          <div className="modal-overlay" onClick={() => setShowScanModal(false)} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 9999 }}>
+            <div className="card" onClick={e => e.stopPropagation()} style={{ 
+              maxWidth: '480px', 
+              width: '90%', 
+              padding: '2rem', 
+              position: 'relative',
+              boxShadow: '0 20px 60px rgba(0,0,0,0.6)',
+              border: '1px solid rgba(6,182,212,0.3)',
+              maxHeight: '90vh',
+              overflowY: 'auto'
+            }}>
+              <button 
+                onClick={() => setShowScanModal(false)}
+                style={{ position: 'absolute', top: '1rem', right: '1rem', background: 'transparent', border: 'none', color: 'var(--text-secondary)', fontSize: '1.5rem', cursor: 'pointer', lineHeight: 1 }}
+              >
+                ×
+              </button>
+
+              <div style={{ textAlign: 'center', marginBottom: '1.5rem' }}>
+                <div style={{ fontSize: '2.5rem', marginBottom: '0.5rem' }}>🩺</div>
+                <h3 style={{ fontFamily: 'var(--font-display)', color: 'white', fontSize: '1.3rem' }}>Book Anovator A5 Health Assessment</h3>
+                <p style={{ color: 'var(--text-secondary)', fontSize: '0.8rem', marginTop: '0.3rem' }}>30-minute full body diagnostic scan</p>
+              </div>
+
+              <div className="form-group" style={{ marginBottom: '1rem' }}>
+                <label style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', textTransform: 'uppercase', fontWeight: '700' }}>Select Date</label>
+                <input 
+                  type="date" 
+                  className="form-control" 
+                  value={scanDate}
+                  min={new Date().toISOString().split('T')[0]}
+                  max={(() => { const d = new Date(); d.setDate(d.getDate() + 30); return d.toISOString().split('T')[0]; })()}
+                  onChange={e => setScanDate(e.target.value)}
+                />
+              </div>
+
+              <div className="form-group" style={{ marginBottom: '1rem' }}>
+                <label style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', textTransform: 'uppercase', fontWeight: '700' }}>Select Time Slot</label>
+                <select className="form-control" value={scanTime} onChange={e => setScanTime(e.target.value)}>
+                  {['08:00 AM', '08:30 AM', '09:00 AM', '09:30 AM', '10:00 AM', '10:30 AM', '11:00 AM', '11:30 AM', '12:00 PM', '12:30 PM', '01:00 PM', '01:30 PM', '02:00 PM', '02:30 PM', '03:00 PM', '03:30 PM', '04:00 PM', '04:30 PM', '05:00 PM', '05:30 PM', '06:00 PM'].map(t => (
+                    <option key={t} value={t}>{t}</option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="form-group" style={{ marginBottom: '1.5rem' }}>
+                <label style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', textTransform: 'uppercase', fontWeight: '700' }}>Notes (Optional)</label>
+                <textarea 
+                  className="form-control" 
+                  rows="2" 
+                  placeholder="Any specific concerns or areas to focus on..."
+                  value={scanNotes}
+                  onChange={e => setScanNotes(e.target.value)}
+                  style={{ resize: 'vertical' }}
+                />
+              </div>
+
+              <div style={{ 
+                background: 'rgba(6,182,212,0.08)', 
+                border: '1px solid rgba(6,182,212,0.2)', 
+                borderRadius: '8px', 
+                padding: '0.75rem', 
+                marginBottom: '1.5rem',
+                fontSize: '0.75rem',
+                color: 'var(--text-secondary)'
+              }}>
+                ⏱️ Duration: <strong style={{ color: 'white' }}>30 minutes</strong><br/>
+                📋 Includes: 3D Posture Analysis, BIA Body Composition, Blood Pressure, SpO₂, Balance Testing<br/>
+                {profile.trainer && profile.trainer !== 'Pending Assignment' 
+                  ? <>👨‍🏫 Assigned Trainer: <strong style={{ color: '#06b6d4' }}>{profile.trainer}</strong></>
+                  : <>👨‍🏫 Request will be sent to: <strong style={{ color: '#fbbf24' }}>All Available Trainers</strong></>}
+              </div>
+
+              <button 
+                className="btn btn-primary" 
+                style={{ width: '100%', padding: '0.75rem', fontWeight: '700', fontSize: '0.95rem', borderRadius: '10px' }}
+                onClick={() => {
+                  const result = requestAnovatorScan(scanDate, scanTime, scanNotes);
+                  if (result) {
+                    setShowScanModal(false);
+                    setScanNotes('');
+                  }
+                }}
+              >
+                Submit Scan Request
+              </button>
+            </div>
+          </div>
+        )}
 
         </div>
 

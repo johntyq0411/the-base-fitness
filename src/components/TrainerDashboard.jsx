@@ -73,7 +73,9 @@ export default function TrainerDashboard({ setActiveSection }) {
     addOneHour,
     isTimeRangeOverlapping,
     matchesDay,
-    timetable
+    timetable,
+    anovatorRequests,
+    acceptAnovatorRequest
   } = useContext(GymContext);
 
   const [activeTab, setActiveTab] = useState('schedule');
@@ -1182,6 +1184,79 @@ export default function TrainerDashboard({ setActiveSection }) {
             </div>
 
             {isMobile ? renderMobileSchedule() : renderDesktopSchedule()}
+
+            {/* ─── Pending Anovator A5 Scan Requests ─── */}
+            {(() => {
+              const pendingScans = anovatorRequests.filter(r => {
+                if (r.status !== 'pending') return false;
+                // If assigned to a specific trainer, only show to that trainer
+                if (r.assignedTrainerId) return r.assignedTrainerId === activeTrainer.id;
+                // If unassigned, show to all trainers
+                return true;
+              });
+
+              if (pendingScans.length === 0) return null;
+
+              return (
+                <div style={{ marginTop: '2.5rem' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '1.25rem' }}>
+                    <h3 style={{ fontSize: '1.3rem', fontFamily: 'var(--font-display)', color: 'white', margin: 0 }}>
+                      🩺 Pending Anovator A5 Scan Requests
+                    </h3>
+                    <span className="badge" style={{ backgroundColor: 'rgba(251, 191, 36, 0.15)', color: '#fbbf24', fontSize: '0.75rem', padding: '0.25rem 0.6rem', fontWeight: '700' }}>
+                      {pendingScans.length}
+                    </span>
+                  </div>
+
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                    {pendingScans.map(req => (
+                      <div key={req.id} style={{
+                        backgroundColor: 'var(--bg-card)',
+                        border: '1px solid rgba(251, 191, 36, 0.25)',
+                        borderRadius: '12px',
+                        padding: '1.25rem',
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        alignItems: 'center',
+                        flexWrap: 'wrap',
+                        gap: '1rem',
+                        boxShadow: '0 4px 20px rgba(0,0,0,0.15)'
+                      }}>
+                        <div style={{ flex: 1, minWidth: '200px' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.4rem' }}>
+                            <strong style={{ color: 'white', fontSize: '1rem' }}>{req.memberName}</strong>
+                            <span className="badge" style={{ backgroundColor: 'rgba(6,182,212,0.15)', color: '#06b6d4', fontSize: '0.6rem', padding: '0.15rem 0.4rem' }}>Anovator Scan</span>
+                          </div>
+                          <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', lineHeight: '1.5' }}>
+                            📅 {getFormattedDateFromKey(req.date)} &bull; ⏰ {req.startTime} – {req.endTime} (30 min)
+                            {req.notes && <><br/>📝 {req.notes}</>}
+                            {!req.assignedTrainerId && (
+                              <><br/><span style={{ color: '#fbbf24', fontStyle: 'italic' }}>⚠️ No assigned trainer – open to all coaches</span></>
+                            )}
+                          </div>
+                        </div>
+                        <button
+                          className="btn btn-primary"
+                          style={{
+                            padding: '0.5rem 1.5rem',
+                            fontSize: '0.85rem',
+                            fontWeight: '700',
+                            borderRadius: '8px',
+                            background: 'linear-gradient(135deg, #10b981 0%, #06b6d4 100%)',
+                            border: 'none',
+                            boxShadow: '0 4px 12px rgba(16,185,129,0.3)',
+                            whiteSpace: 'nowrap'
+                          }}
+                          onClick={() => acceptAnovatorRequest(req.id, activeTrainer.id)}
+                        >
+                          ✅ Accept Scan
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              );
+            })()}
           </div>
         )}
 
