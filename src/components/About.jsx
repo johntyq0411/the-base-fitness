@@ -21,11 +21,11 @@ export default function About() {
       badge: 'Expert Coaching'
     },
     {
-      title: 'Anovator Body Composition',
-      subtitle: 'Precision metabolic assessment diagnostic',
-      desc: 'Ditch the standard scale. Get deep insights into your skeletal muscle mass, body fat percentage, visceral fat, and water levels to customize your plans.',
-      image: 'body_analyzer.png',
-      badge: 'Diagnostics'
+      title: 'Anovator A5 Diagnostic',
+      subtitle: '3D AI Posture & Body Composition Analyzer',
+      desc: 'Ditch the standard scales. The advanced commercial-grade Anovator A5 health assessment station delivers a full diagnostic profile in under 5 minutes: AI 3D posture risk analysis (scoliosis, pelvic tilt), 8-electrode BIA (segmental muscle & fat mass, BMR), clinical vitals (blood pressure, SpO2), and balance/mobility testing.',
+      image: 'anovator_a5.png',
+      badge: 'Advanced Diagnostics'
     },
     {
       title: 'Modern Training Environment',
