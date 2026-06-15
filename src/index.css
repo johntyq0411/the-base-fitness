@@ -2129,4 +2129,75 @@ button, input, select, textarea {
   to { transform: translateY(0); }
 }
 
+/* MICROSOFT TEAMS-STYLE HOURLY CALENDAR GRID */
+
+.teams-calendar-wrapper {
+  scrollbar-width: thin;
+  scrollbar-color: var(--border-color) transparent;
+}
+
+.teams-hour-cell {
+  transition: background-color 0.2s ease;
+}
+
+.teams-hour-cell:hover {
+  background-color: rgba(255, 255, 255, 0.02);
+}
+
+/* Base styles for positioned cards */
+.teams-event-card {
+  border-radius: 0.5rem;
+  padding: 1px;
+  overflow: hidden;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  transition: transform 0.2s ease, box-shadow 0.2s ease, filter 0.2s ease;
+  user-select: none;
+}
+
+.teams-event-card:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  filter: brightness(1.1);
+}
+
+.teams-event-card:active {
+  transform: translateY(0);
+}
+
+/* Gym Classes - Indigo accent */
+.teams-event-card.class-card {
+  background-color: rgba(99, 102, 241, 0.15) !important;
+  border-left: 4px solid #6366f1 !important;
+  border-top: 1px solid rgba(99, 102, 241, 0.2) !important;
+  border-right: 1px solid rgba(99, 102, 241, 0.2) !important;
+  border-bottom: 1px solid rgba(99, 102, 241, 0.2) !important;
+}
+
+/* PT Bookings - Teal accent */
+.teams-event-card.booking-card {
+  background-color: rgba(20, 184, 166, 0.15) !important;
+  border-left: 4px solid #14b8a6 !important;
+  border-top: 1px solid rgba(20, 184, 166, 0.2) !important;
+  border-right: 1px solid rgba(20, 184, 166, 0.2) !important;
+  border-bottom: 1px solid rgba(20, 184, 166, 0.2) !important;
+}
+
+/* Trainer blocks - Gray / Charcoal */
+.teams-event-card.block-card {
+  background-color: rgba(107, 114, 128, 0.12) !important;
+  border-left: 4px solid #9ca3af !important;
+  border-top: 1px solid rgba(107, 114, 128, 0.2) !important;
+  border-right: 1px solid rgba(107, 114, 128, 0.2) !important;
+  border-bottom: 1px solid rgba(107, 114, 128, 0.2) !important;
+}
+
+/* Special Comp Prep block - Amber orange accent */
+.teams-event-card.block-card.comp-card {
+  background-color: rgba(217, 119, 6, 0.15) !important;
+  border-left: 4px solid #d97706 !important;
+  border-top: 1px solid rgba(217, 119, 6, 0.2) !important;
+  border-right: 1px solid rgba(217, 119, 6, 0.2) !important;
+  border-bottom: 1px solid rgba(217, 119, 6, 0.2) !important;
+}
+
 

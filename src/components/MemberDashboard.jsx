@@ -52,20 +52,6 @@ const getFormattedDateFromKey = (key) => {
   return key;
 };
 
-// General helper to match stored weekday string or specific dateKey
-const matchesDay = (storedDay, selectedDayKey) => {
-  if (!storedDay || !selectedDayKey) return false;
-  if (storedDay.toLowerCase() === selectedDayKey.toLowerCase()) return true;
-  
-  const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
-  const d = new Date(selectedDayKey);
-  if (!isNaN(d.getTime())) {
-    const weekday = dayNames[d.getDay()];
-    return storedDay.toLowerCase() === weekday.toLowerCase();
-  }
-  return false;
-};
-
 export default function MemberDashboard({ setActiveSection }) {
   const { 
     currentUser, 
@@ -77,7 +63,10 @@ export default function MemberDashboard({ setActiveSection }) {
     logout,
     trainers,
     bookPtSession,
-    trainerBlocks
+    trainerBlocks,
+    isTimeRangeOverlapping,
+    addOneHour,
+    matchesDay
   } = useContext(GymContext);
 
   // Find member profile details
@@ -135,8 +124,8 @@ export default function MemberDashboard({ setActiveSection }) {
     if (!assignedCoach) return;
     const times = ['08:00 AM', '10:00 AM', '12:00 PM', '02:00 PM', '04:00 PM', '06:00 PM', '08:00 PM'];
     const firstAvailable = times.find(t => {
-      const isBooked = ptBookings.some(b => b.trainerId === assignedCoach.id && matchesDay(b.day, day) && b.time.toLowerCase() === t.toLowerCase());
-      const isBlocked = trainerBlocks.some(b => b.trainerId === assignedCoach.id && matchesDay(b.day, day) && b.time.toLowerCase() === t.toLowerCase());
+      const isBooked = ptBookings.some(b => b.trainerId === assignedCoach.id && matchesDay(b.day, day) && isTimeRangeOverlapping(b.time, addOneHour(b.time), t, addOneHour(t)));
+      const isBlocked = trainerBlocks.some(b => b.trainerId === assignedCoach.id && matchesDay(b.day, day) && isTimeRangeOverlapping(b.startTime || b.time, b.endTime || addOneHour(b.startTime || b.time), t, addOneHour(t)));
       return !isBooked && !isBlocked;
     });
     if (firstAvailable) {
@@ -313,6 +302,57 @@ export default function MemberDashboard({ setActiveSection }) {
                 )}
               </div>
             </div>
+            
+            {/* Progress Photos Card */}
+            {profile.progressPhotos && profile.progressPhotos.length > 0 && (
+              <div style={{ marginTop: '2.5rem', borderTop: '1px solid var(--border-color)', paddingTop: '2rem' }}>
+                <h4 style={{ color: 'white', fontSize: '1.15rem', marginBottom: '1.25rem', display: 'flex', alignItems: 'center', gap: '0.5rem', fontFamily: 'var(--font-display)' }}>
+                  📸 My Transformations & Progress Photos
+                </h4>
+                
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
+                  {profile.progressPhotos.map((set) => (
+                    <div key={set.id} style={{ border: '1px solid var(--border-color)', borderRadius: '1rem', padding: '1.5rem', backgroundColor: 'var(--bg-dark)' }}>
+                      <div style={{ marginBottom: '1rem', borderBottom: '1px dashed var(--border-color)', paddingBottom: '0.5rem' }}>
+                        <strong style={{ color: 'white', fontSize: '1rem' }}>📅 Date: {getFormattedDateFromKey(set.date) || set.date}</strong>
+                      </div>
+                      
+                      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '1.5rem', marginBottom: '1rem' }}>
+                        {/* Before photo */}
+                        <div style={{ textAlign: 'center', position: 'relative' }}>
+                          <span style={{ position: 'absolute', top: '0.5rem', left: '0.5rem', backgroundColor: '#ef4444', color: 'white', fontSize: '0.65rem', padding: '0.15rem 0.4rem', borderRadius: '0.25rem', fontWeight: 'bold', zIndex: 5 }}>
+                            BEFORE
+                          </span>
+                          <img 
+                            src={set.before} 
+                            alt="Before Progress" 
+                            style={{ width: '100%', maxHeight: '250px', objectFit: 'cover', borderRadius: '0.5rem', border: '1px solid var(--border-color)' }} 
+                          />
+                        </div>
+
+                        {/* After photo */}
+                        <div style={{ textAlign: 'center', position: 'relative' }}>
+                          <span style={{ position: 'absolute', top: '0.5rem', left: '0.5rem', backgroundColor: '#10b981', color: 'white', fontSize: '0.65rem', padding: '0.15rem 0.4rem', borderRadius: '0.25rem', fontWeight: 'bold', zIndex: 5 }}>
+                            AFTER
+                          </span>
+                          <img 
+                            src={set.after} 
+                            alt="After Progress" 
+                            style={{ width: '100%', maxHeight: '250px', objectFit: 'cover', borderRadius: '0.5rem', border: '1px solid var(--border-color)' }} 
+                          />
+                        </div>
+                      </div>
+                      
+                      {set.notes && (
+                        <div style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', fontStyle: 'italic', borderTop: '1px dashed var(--border-color)', paddingTop: '0.75rem', marginTop: '0.5rem' }}>
+                          💡 Coach Comments: {set.notes}
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
         )}
 
@@ -428,8 +468,8 @@ export default function MemberDashboard({ setActiveSection }) {
                         <label style={{ fontSize: '0.7rem', color: 'var(--text-secondary)', textTransform: 'uppercase', display: 'block', marginBottom: '0.25rem' }}>Time Slot</label>
                         <select className="form-control" value={ptTime} onChange={(e) => setPtTime(e.target.value)} style={{ padding: '0.4rem', fontSize: '0.85rem', height: 'auto' }}>
                           {['08:00 AM', '10:00 AM', '12:00 PM', '02:00 PM', '04:00 PM', '06:00 PM', '08:00 PM'].map(t => {
-                            const isBooked = ptBookings.some(b => b.trainerId === assignedCoach.id && matchesDay(b.day, ptDay) && b.time.toLowerCase() === t.toLowerCase());
-                            const block = trainerBlocks.find(b => b.trainerId === assignedCoach.id && matchesDay(b.day, ptDay) && b.time.toLowerCase() === t.toLowerCase());
+                            const isBooked = ptBookings.some(b => b.trainerId === assignedCoach.id && matchesDay(b.day, ptDay) && isTimeRangeOverlapping(b.time, addOneHour(b.time), t, addOneHour(t)));
+                            const block = trainerBlocks.find(b => b.trainerId === assignedCoach.id && matchesDay(b.day, ptDay) && isTimeRangeOverlapping(b.startTime || b.time, b.endTime || addOneHour(b.startTime || b.time), t, addOneHour(t)));
                             const isBlocked = !!block;
                             let label = t;
                             if (isBooked) {

@@ -2,7 +2,7 @@ import React, { useState, useContext } from 'react';
 import { GymContext } from '../context/GymContext';
 
 export default function Trainers({ setActiveSection }) {
-  const { trainers, bookPtSession, currentUser, members, trainerBlocks, ptBookings } = useContext(GymContext);
+  const { trainers, bookPtSession, currentUser, members, trainerBlocks, ptBookings, isTimeRangeOverlapping, addOneHour, matchesDay } = useContext(GymContext);
   const [selectedTrainer, setSelectedTrainer] = useState(null);
   const [bookingDay, setBookingDay] = useState('Monday');
   const [bookingTime, setBookingTime] = useState('10:00 AM');
@@ -37,8 +37,8 @@ export default function Trainers({ setActiveSection }) {
 
     const defaultDay = 'Monday';
     const firstAvailable = times.find(t => {
-      const isBooked = ptBookings.some(b => b.trainerId === trainer.id && b.day.toLowerCase() === defaultDay.toLowerCase() && b.time.toLowerCase() === t.toLowerCase());
-      const isBlocked = trainerBlocks.some(b => b.trainerId === trainer.id && b.day.toLowerCase() === defaultDay.toLowerCase() && b.time.toLowerCase() === t.toLowerCase());
+      const isBooked = ptBookings.some(b => b.trainerId === trainer.id && matchesDay(b.day, defaultDay) && isTimeRangeOverlapping(b.time, addOneHour(b.time), t, addOneHour(t)));
+      const isBlocked = trainerBlocks.some(b => b.trainerId === trainer.id && matchesDay(b.day, defaultDay) && isTimeRangeOverlapping(b.startTime || b.time, b.endTime || addOneHour(b.startTime || b.time), t, addOneHour(t)));
       return !isBooked && !isBlocked;
     }) || '10:00 AM';
 
@@ -51,8 +51,8 @@ export default function Trainers({ setActiveSection }) {
     setBookingDay(day);
     if (!selectedTrainer) return;
     const firstAvailable = times.find(t => {
-      const isBooked = ptBookings.some(b => b.trainerId === selectedTrainer.id && b.day.toLowerCase() === day.toLowerCase() && b.time.toLowerCase() === t.toLowerCase());
-      const isBlocked = trainerBlocks.some(b => b.trainerId === selectedTrainer.id && b.day.toLowerCase() === day.toLowerCase() && b.time.toLowerCase() === t.toLowerCase());
+      const isBooked = ptBookings.some(b => b.trainerId === selectedTrainer.id && matchesDay(b.day, day) && isTimeRangeOverlapping(b.time, addOneHour(b.time), t, addOneHour(t)));
+      const isBlocked = trainerBlocks.some(b => b.trainerId === selectedTrainer.id && matchesDay(b.day, day) && isTimeRangeOverlapping(b.startTime || b.time, b.endTime || addOneHour(b.startTime || b.time), t, addOneHour(t)));
       return !isBooked && !isBlocked;
     }) || '10:00 AM';
     setBookingTime(firstAvailable);
@@ -260,8 +260,8 @@ export default function Trainers({ setActiveSection }) {
                 onChange={(e) => setBookingTime(e.target.value)}
               >
                 {times.map(t => {
-                  const isBooked = ptBookings.some(b => b.trainerId === selectedTrainer.id && b.day.toLowerCase() === bookingDay.toLowerCase() && b.time.toLowerCase() === t.toLowerCase());
-                  const block = trainerBlocks.find(b => b.trainerId === selectedTrainer.id && b.day.toLowerCase() === bookingDay.toLowerCase() && b.time.toLowerCase() === t.toLowerCase());
+                  const isBooked = ptBookings.some(b => b.trainerId === selectedTrainer.id && matchesDay(b.day, bookingDay) && isTimeRangeOverlapping(b.time, addOneHour(b.time), t, addOneHour(t)));
+                  const block = trainerBlocks.find(b => b.trainerId === selectedTrainer.id && matchesDay(b.day, bookingDay) && isTimeRangeOverlapping(b.startTime || b.time, b.endTime || addOneHour(b.startTime || b.time), t, addOneHour(t)));
                   const isBlocked = !!block;
                   let label = t;
                   if (isBooked) {

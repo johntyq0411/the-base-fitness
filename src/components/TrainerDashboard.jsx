@@ -52,20 +52,6 @@ const getFormattedDateFromKey = (key) => {
   return key;
 };
 
-// General helper to match stored weekday string or specific dateKey
-const matchesDay = (storedDay, selectedDayKey) => {
-  if (!storedDay || !selectedDayKey) return false;
-  if (storedDay.toLowerCase() === selectedDayKey.toLowerCase()) return true;
-  
-  const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
-  const d = new Date(selectedDayKey);
-  if (!isNaN(d.getTime())) {
-    const weekday = dayNames[d.getDay()];
-    return storedDay.toLowerCase() === weekday.toLowerCase();
-  }
-  return false;
-};
-
 export default function TrainerDashboard({ setActiveSection }) {
   const { 
     trainers, 
@@ -78,9 +64,16 @@ export default function TrainerDashboard({ setActiveSection }) {
     trainerBlocks,
     addTrainerBlock,
     removeTrainerBlock,
-    updateTrainingPlan,
     updateMealPlan,
-    updateTrainerProfile
+    updateTrainerProfile,
+    addClientProgressPhotos,
+    deleteClientProgressPhotos,
+    parseTimeToMinutes,
+    parseTimeRange,
+    addOneHour,
+    isTimeRangeOverlapping,
+    matchesDay,
+    timetable
   } = useContext(GymContext);
 
   const [activeTab, setActiveTab] = useState('schedule');
@@ -104,6 +97,22 @@ export default function TrainerDashboard({ setActiveSection }) {
     m.trainer && m.trainer.toLowerCase().includes(activeTrainer.name.toLowerCase())
   );
 
+  const filteredClients = assignedMembers.filter(member => {
+    const matchesSearch = member.name.toLowerCase().includes(clientSearchQuery.toLowerCase()) ||
+                          member.email.toLowerCase().includes(clientSearchQuery.toLowerCase());
+    const matchesSub = clientFilterSubscription === 'all' || 
+                       (member.subscription && member.subscription.toLowerCase().includes(clientFilterSubscription.toLowerCase()));
+    
+    let matchesCredits = true;
+    if (clientFilterCredits === 'has_credits') {
+      matchesCredits = member.ptSessionsLeft > 0;
+    } else if (clientFilterCredits === 'no_credits') {
+      matchesCredits = member.ptSessionsLeft === 0;
+    }
+    
+    return matchesSearch && matchesSub && matchesCredits;
+  });
+
   // PT BOOKINGS
   const scheduledSessions = ptBookings.filter(b => b.trainerId === activeTrainer.id);
 
@@ -113,6 +122,23 @@ export default function TrainerDashboard({ setActiveSection }) {
     return daysList.length > 0 ? daysList[0].dateKey : '';
   });
   const [selectedSlot, setSelectedSlot] = useState(null);
+  const [creationSlot, setCreationSlot] = useState(null);
+  const [blockTitle, setBlockTitle] = useState('Unavailable');
+  const [blockStartTime, setBlockStartTime] = useState('10:00 AM');
+  const [blockEndTime, setBlockEndTime] = useState('11:00 AM');
+  const [blockDescription, setBlockDescription] = useState('');
+  const [blockType, setBlockType] = useState('general_block');
+
+  useEffect(() => {
+    if (creationSlot) {
+      setBlockStartTime(creationSlot.time);
+      setBlockEndTime(addOneHour(creationSlot.time));
+      setBlockTitle('Unavailable');
+      setBlockDescription('');
+      setBlockType('general_block');
+    }
+  }, [creationSlot]);
+
   const times = ['08:00 AM', '10:00 AM', '12:00 PM', '02:00 PM', '04:00 PM', '06:00 PM', '08:00 PM'];
 
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
@@ -141,6 +167,55 @@ export default function TrainerDashboard({ setActiveSection }) {
   const [carbs, setCarbs] = useState(200);
   const [fats, setFats] = useState(65);
   const [mealsState, setMealsState] = useState([]);
+
+  // --- CLIENT SEARCH & FILTER STATE ---
+  const [clientSearchQuery, setClientSearchQuery] = useState('');
+  const [clientFilterSubscription, setClientFilterSubscription] = useState('all');
+  const [clientFilterCredits, setClientFilterCredits] = useState('all');
+
+  // --- PROGRESS PHOTO STATE ---
+  const [beforePreview, setBeforePreview] = useState('');
+  const [afterPreview, setAfterPreview] = useState('');
+  const [photoDate, setPhotoDate] = useState(() => {
+    const today = new Date();
+    const year = today.getFullYear();
+    const month = String(today.getMonth() + 1).padStart(2, '0');
+    const day = String(today.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  });
+  const [photoNotes, setPhotoNotes] = useState('');
+
+  // Image compressor utility to stay under localStorage limits
+  const compressImage = (base64Str, callback) => {
+    const img = new Image();
+    img.src = base64Str;
+    img.onload = () => {
+      const canvas = document.createElement('canvas');
+      const MAX_WIDTH = 300;
+      const MAX_HEIGHT = 300;
+      let width = img.width;
+      let height = img.height;
+      
+      if (width > height) {
+        if (width > MAX_WIDTH) {
+          height *= MAX_WIDTH / width;
+          width = MAX_WIDTH;
+        }
+      } else {
+        if (height > MAX_HEIGHT) {
+          width *= MAX_HEIGHT / height;
+          height = MAX_HEIGHT;
+        }
+      }
+      
+      canvas.width = width;
+      canvas.height = height;
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(img, 0, 0, width, height);
+      const compressed = canvas.toDataURL('image/jpeg', 0.6);
+      callback(compressed);
+    };
+  };
 
   // --- WHATSAPP TEMPLATES STATE ---
   const [waTemplate, setWaTemplate] = useState('checkin');
@@ -334,120 +409,385 @@ export default function TrainerDashboard({ setActiveSection }) {
   };
   const todayDayName = getTodayDayName();
 
+  const getCalendarEventsForDay = (dateKey) => {
+    const list = [];
+
+    // 1. Classes coached by active trainer
+    const dayClasses = timetable.filter(
+      c => c.trainer.toLowerCase() === activeTrainer.name.toLowerCase() && matchesDay(c.day, dateKey)
+    );
+    dayClasses.forEach(c => {
+      const { start, end } = parseTimeRange(c.time);
+      list.push({
+        type: 'class',
+        id: c.id,
+        title: c.name,
+        subtitle: `Coaching | ${c.room}`,
+        emoji: '💪',
+        startTime: c.time.split('-')[0].trim(),
+        endTime: c.time.split('-')[1].trim(),
+        startMin: start,
+        endMin: end,
+        eventObj: c
+      });
+    });
+
+    // 2. PT sessions scheduled with active trainer
+    const daySessions = scheduledSessions.filter(
+      b => matchesDay(b.day, dateKey)
+    );
+    daySessions.forEach(b => {
+      const { start, end } = parseTimeRange(b.time); // defaults to 1 hour
+      list.push({
+        type: 'booking',
+        id: b.id,
+        title: `Session: ${b.memberName}`,
+        subtitle: '1-on-1 PT Coaching',
+        emoji: '👤',
+        startTime: b.time,
+        endTime: addOneHour(b.time),
+        startMin: start,
+        endMin: end,
+        eventObj: b
+      });
+    });
+
+    // 3. Trainer availability blocks
+    const dayBlocks = trainerBlocks.filter(
+      b => b.trainerId === activeTrainer.id && matchesDay(b.day, dateKey)
+    );
+    dayBlocks.forEach(b => {
+      const startStr = b.startTime || b.time;
+      const endStr = b.endTime || addOneHour(startStr);
+      const startMins = parseTimeToMinutes(startStr);
+      const endMins = parseTimeToMinutes(endStr);
+      const isComp = b.type === 'personal_training';
+      list.push({
+        type: 'block',
+        id: b.id || `block_${b.day}_${startStr}`,
+        title: b.label || (isComp ? 'Comp Prep' : 'Blocked'),
+        subtitle: b.description || (isComp ? 'Competition prep training' : 'Unavailable'),
+        emoji: isComp ? '🏋️' : '🚫',
+        startTime: startStr,
+        endTime: endStr,
+        startMin: startMins,
+        endMin: endMins,
+        eventObj: b
+      });
+    });
+
+    // Sort chronologically by startMin
+    return list.sort((a, b) => a.startMin - b.startMin);
+  };
+
   const renderSlotModal = () => {
     if (!selectedSlot) return null;
-    const { day, time } = selectedSlot;
+    const { type, event } = selectedSlot;
     
-    const booking = scheduledSessions.find(
-      b => matchesDay(b.day, day) && b.time.toLowerCase() === time.toLowerCase()
-    );
-    
-    const block = trainerBlocks.find(
-      b => b.trainerId === activeTrainer.id && matchesDay(b.day, day) && b.time.toLowerCase() === time.toLowerCase()
-    );
-    
-    return (
-      <div className="class-modal-overlay" onClick={() => setSelectedSlot(null)}>
-        <div className="class-modal-content" onClick={(e) => e.stopPropagation()}>
-          <button className="class-modal-close" onClick={() => setSelectedSlot(null)}>
-            <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M6 18 18 6M6 6l12 12" />
-            </svg>
-          </button>
-          
-          <div className="class-modal-time-badge">
-            <svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
-              <circle cx="12" cy="12" r="9" />
-              <path d="M12 6v6l4 2" />
-            </svg>
-            <span>{getFormattedDateFromKey(day) || day} | {time}</span>
-          </div>
-          
-          <h3 className="class-modal-title" style={{ color: 'white', marginBottom: '1.25rem' }}>
-            {booking ? `Session with ${booking.memberName}` : block ? `${block.label}` : 'Available Session Slot'}
-          </h3>
-          
-          <div className="class-modal-meta-grid" style={{ marginBottom: '1.5rem' }}>
-            <div className="class-modal-meta-item">
-              <span className="class-modal-meta-label">Status</span>
-              <span className="class-modal-meta-val">
-                {booking ? '🟢 Booked' : block ? '🔴 Blocked' : '🔵 Available'}
-              </span>
-            </div>
-            <div className="class-modal-meta-item">
-              <span className="class-modal-meta-label">Type</span>
-              <span className="class-modal-meta-val">
-                {booking ? 'PT Session' : block ? (block.type === 'personal_training' ? 'Comp Training' : 'Unavailable') : 'Coaching Slot'}
-              </span>
-            </div>
-          </div>
-          
-          {booking && (
-            <div style={{ backgroundColor: 'rgba(255,255,255,0.02)', padding: '1rem', borderRadius: '0.75rem', border: '1px solid var(--border-color)', marginBottom: '1.5rem' }}>
-              <h4 style={{ color: 'white', fontSize: '0.9rem', marginBottom: '0.5rem' }}>Client Information</h4>
-              <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
-                Name: <strong>{booking.memberName}</strong><br />
-                Email: <strong>{booking.memberEmail}</strong>
-              </p>
-            </div>
-          )}
-          
-          <div className="modal-actions" style={{ display: 'flex', gap: '0.75rem', borderTop: '1px solid var(--border-color)', paddingTop: '1.5rem' }}>
-            <button type="button" className="btn btn-secondary" style={{ flex: 1 }} onClick={() => setSelectedSlot(null)}>
-              Close
+    // Render based on event type
+    if (type === 'class') {
+      const enrolledNames = event.enrolled && event.enrolled.length > 0 
+        ? event.enrolled.map(email => {
+            const mem = members.find(m => m.email.toLowerCase() === email.toLowerCase());
+            return mem ? mem.name : email;
+          }).join(', ')
+        : 'No members booked yet';
+
+      return (
+        <div className="class-modal-overlay" onClick={() => setSelectedSlot(null)}>
+          <div className="class-modal-content" onClick={(e) => e.stopPropagation()}>
+            <button className="class-modal-close" onClick={() => setSelectedSlot(null)}>
+              <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18 18 6M6 6l12 12" />
+              </svg>
             </button>
             
-            {booking ? (
+            <div className="class-modal-time-badge" style={{ backgroundColor: 'rgba(99, 102, 241, 0.15)', color: '#a5b4fc', border: 'none' }}>
+              <span>💪 Gym Class</span>
+            </div>
+            
+            <h3 className="class-modal-title" style={{ color: 'white', marginBottom: '1.25rem' }}>
+              {event.name}
+            </h3>
+            
+            <div className="class-modal-meta-grid" style={{ marginBottom: '1.5rem', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+              <div className="class-modal-meta-item">
+                <span className="class-modal-meta-label" style={{ display: 'block', fontSize: '0.75rem', color: 'var(--text-secondary)' }}>Day & Time</span>
+                <span className="class-modal-meta-val" style={{ color: 'white', fontWeight: '600' }}>
+                  {event.day} | {event.time}
+                </span>
+              </div>
+              <div className="class-modal-meta-item">
+                <span className="class-modal-meta-label" style={{ display: 'block', fontSize: '0.75rem', color: 'var(--text-secondary)' }}>Location</span>
+                <span className="class-modal-meta-val" style={{ color: 'white', fontWeight: '600' }}>
+                  📍 {event.room}
+                </span>
+              </div>
+            </div>
+
+            <div style={{ backgroundColor: 'rgba(255,255,255,0.02)', padding: '1rem', borderRadius: '0.75rem', border: '1px solid var(--border-color)', marginBottom: '1.5rem' }}>
+              <h4 style={{ color: 'white', fontSize: '0.9rem', marginBottom: '0.5rem' }}>Enrolled Members ({event.enrolled?.length || 0} / {event.capacity})</h4>
+              <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
+                {enrolledNames}
+              </p>
+            </div>
+            
+            <div className="modal-actions" style={{ display: 'flex', gap: '0.75rem', borderTop: '1px solid var(--border-color)', paddingTop: '1.5rem' }}>
+              <button type="button" className="btn btn-secondary" style={{ flex: 1 }} onClick={() => setSelectedSlot(null)}>
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      );
+    }
+    
+    if (type === 'booking') {
+      return (
+        <div className="class-modal-overlay" onClick={() => setSelectedSlot(null)}>
+          <div className="class-modal-content" onClick={(e) => e.stopPropagation()}>
+            <button className="class-modal-close" onClick={() => setSelectedSlot(null)}>
+              <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18 18 6M6 6l12 12" />
+              </svg>
+            </button>
+            
+            <div className="class-modal-time-badge" style={{ backgroundColor: 'rgba(20, 184, 166, 0.15)', color: '#99f6e4', border: 'none' }}>
+              <span>👤 1-on-1 PT Session</span>
+            </div>
+            
+            <h3 className="class-modal-title" style={{ color: 'white', marginBottom: '1.25rem' }}>
+              Session with {event.memberName}
+            </h3>
+            
+            <div className="class-modal-meta-grid" style={{ marginBottom: '1.5rem', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+              <div className="class-modal-meta-item">
+                <span className="class-modal-meta-label" style={{ display: 'block', fontSize: '0.75rem', color: 'var(--text-secondary)' }}>Date & Time</span>
+                <span className="class-modal-meta-val" style={{ color: 'white', fontWeight: '600' }}>
+                  {getFormattedDateFromKey(event.day) || event.day} | {event.time}
+                </span>
+              </div>
+              <div className="class-modal-meta-item">
+                <span className="class-modal-meta-label" style={{ display: 'block', fontSize: '0.75rem', color: 'var(--text-secondary)' }}>Client Email</span>
+                <span className="class-modal-meta-val" style={{ color: 'white', fontWeight: '600' }}>
+                  {event.memberEmail}
+                </span>
+              </div>
+            </div>
+            
+            <div className="modal-actions" style={{ display: 'flex', gap: '0.75rem', borderTop: '1px solid var(--border-color)', paddingTop: '1.5rem' }}>
+              <button type="button" className="btn btn-secondary" style={{ flex: 1 }} onClick={() => setSelectedSlot(null)}>
+                Close
+              </button>
               <button 
                 type="button" 
                 className="btn btn-danger" 
                 style={{ flex: 2 }}
                 onClick={() => {
-                  cancelPtBooking(booking.id);
+                  cancelPtBooking(event.id);
                   setSelectedSlot(null);
                 }}
               >
-                Cancel Session
+                Cancel PT Session
               </button>
-            ) : block ? (
-              <button 
-                type="button" 
-                className="btn btn-primary" 
-                style={{ flex: 2 }}
-                onClick={() => {
-                  removeTrainerBlock(activeTrainer.id, day, time);
-                  setSelectedSlot(null);
-                }}
-              >
-                Unblock Slot
-              </button>
-            ) : (
-              <div style={{ display: 'flex', gap: '0.5rem', flex: 2 }}>
-                <button 
-                  type="button" 
-                  className="btn btn-secondary" 
-                  style={{ flex: 1, padding: '0.4rem', fontSize: '0.8rem' }}
-                  onClick={() => {
-                    addTrainerBlock(activeTrainer.id, day, time, 'general_block', 'Unavailable');
-                    setSelectedSlot(null);
-                  }}
-                >
-                  Block
-                </button>
-                <button 
-                  type="button" 
-                  className="btn btn-primary" 
-                  style={{ flex: 1, padding: '0.4rem', fontSize: '0.8rem', backgroundColor: '#d97706', borderColor: '#d97706' }}
-                  onClick={() => {
-                    addTrainerBlock(activeTrainer.id, day, time, 'personal_training', 'Comp Prep');
-                    setSelectedSlot(null);
-                  }}
-                >
-                  Comp
-                </button>
+            </div>
+          </div>
+        </div>
+      );
+    }
+    
+    if (type === 'block') {
+      const isComp = event.type === 'personal_training';
+      return (
+        <div className="class-modal-overlay" onClick={() => setSelectedSlot(null)}>
+          <div className="class-modal-content" onClick={(e) => e.stopPropagation()}>
+            <button className="class-modal-close" onClick={() => setSelectedSlot(null)}>
+              <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18 18 6M6 6l12 12" />
+              </svg>
+            </button>
+            
+            <div className="class-modal-time-badge" style={{ backgroundColor: isComp ? 'rgba(217, 119, 6, 0.15)' : 'rgba(255, 255, 255, 0.08)', color: isComp ? '#f59e0b' : '#d1d5db', border: 'none' }}>
+              <span>{isComp ? '🏋️ Comp Prep Block' : '🚫 Unavailable Block'}</span>
+            </div>
+            
+            <h3 className="class-modal-title" style={{ color: 'white', marginBottom: '1.25rem' }}>
+              {event.label}
+            </h3>
+            
+            <div className="class-modal-meta-grid" style={{ marginBottom: '1.5rem', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+              <div className="class-modal-meta-item">
+                <span className="class-modal-meta-label" style={{ display: 'block', fontSize: '0.75rem', color: 'var(--text-secondary)' }}>Date</span>
+                <span className="class-modal-meta-val" style={{ color: 'white', fontWeight: '600' }}>
+                  {getFormattedDateFromKey(event.day) || event.day}
+                </span>
+              </div>
+              <div className="class-modal-meta-item">
+                <span className="class-modal-meta-label" style={{ display: 'block', fontSize: '0.75rem', color: 'var(--text-secondary)' }}>Time Range</span>
+                <span className="class-modal-meta-val" style={{ color: 'white', fontWeight: '600' }}>
+                  {event.startTime || event.time} - {event.endTime || addOneHour(event.startTime || event.time)}
+                </span>
+              </div>
+            </div>
+
+            {event.description && (
+              <div style={{ backgroundColor: 'rgba(255,255,255,0.02)', padding: '1rem', borderRadius: '0.75rem', border: '1px solid var(--border-color)', marginBottom: '1.5rem' }}>
+                <h4 style={{ color: 'white', fontSize: '0.9rem', marginBottom: '0.5rem' }}>Description / Notes</h4>
+                <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', whiteSpace: 'pre-wrap' }}>
+                  {event.description}
+                </p>
               </div>
             )}
+            
+            <div className="modal-actions" style={{ display: 'flex', gap: '0.75rem', borderTop: '1px solid var(--border-color)', paddingTop: '1.5rem' }}>
+              <button type="button" className="btn btn-secondary" style={{ flex: 1 }} onClick={() => setSelectedSlot(null)}>
+                Close
+              </button>
+              <button 
+                type="button" 
+                className="btn btn-danger" 
+                style={{ flex: 2 }}
+                onClick={() => {
+                  removeTrainerBlock(event.trainerId, event.day, event.startTime || event.time);
+                  setSelectedSlot(null);
+                }}
+              >
+                Unblock / Delete Block
+              </button>
+            </div>
           </div>
+        </div>
+      );
+    }
+    
+    return null;
+  };
+
+  const renderCreateBlockModal = () => {
+    if (!creationSlot) return null;
+    const { day, time } = creationSlot;
+    
+    const handleSubmit = (e) => {
+      e.preventDefault();
+      const success = addTrainerBlock(
+        activeTrainer.id,
+        day,
+        blockStartTime,
+        blockEndTime,
+        blockType,
+        blockTitle,
+        blockDescription
+      );
+      if (success) {
+        setCreationSlot(null);
+      }
+    };
+    
+    return (
+      <div className="class-modal-overlay" onClick={() => setCreationSlot(null)}>
+        <div className="class-modal-content" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '500px' }}>
+          <button className="class-modal-close" onClick={() => setCreationSlot(null)}>
+            <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M6 18 18 6M6 6l12 12" />
+            </svg>
+          </button>
+          
+          <h3 style={{ color: 'white', marginBottom: '1.5rem', fontFamily: 'var(--font-display)' }}>
+            📅 Create Block / Event
+          </h3>
+          
+          <form onSubmit={handleSubmit}>
+            <div className="form-group" style={{ marginBottom: '1rem' }}>
+              <label style={{ color: 'white', fontSize: '0.85rem', marginBottom: '0.4rem', display: 'block' }}>Event Title</label>
+              <input 
+                type="text" 
+                className="form-control" 
+                value={blockTitle} 
+                onChange={(e) => setBlockTitle(e.target.value)} 
+                required 
+                placeholder="e.g. Personal Workout, Lunch Break"
+                style={{ backgroundColor: 'var(--bg-dark)', border: '1px solid var(--border-color)', color: 'white' }}
+              />
+            </div>
+            
+            <div className="grid-2" style={{ gap: '1rem', marginBottom: '1rem' }}>
+              <div className="form-group">
+                <label style={{ color: 'white', fontSize: '0.85rem', marginBottom: '0.4rem', display: 'block' }}>Start Time</label>
+                <select 
+                  className="form-control"
+                  value={blockStartTime}
+                  onChange={(e) => setBlockStartTime(e.target.value)}
+                  style={{ backgroundColor: 'var(--bg-dark)', border: '1px solid var(--border-color)', color: 'white' }}
+                >
+                  {Array.from({ length: 29 }).map((_, idx) => {
+                    const totalMins = 480 + idx * 30;
+                    const hours = Math.floor(totalMins / 60);
+                    const minutes = totalMins % 60;
+                    const ampm = hours >= 12 ? 'PM' : 'AM';
+                    const displayHours = hours % 12 === 0 ? 12 : hours % 12;
+                    const displayMins = String(minutes).padStart(2, '0');
+                    const tStr = `${String(displayHours).padStart(2, '0')}:${displayMins} ${ampm}`;
+                    return <option key={idx} value={tStr}>{tStr}</option>;
+                  })}
+                </select>
+              </div>
+              
+              <div className="form-group">
+                <label style={{ color: 'white', fontSize: '0.85rem', marginBottom: '0.4rem', display: 'block' }}>End Time</label>
+                <select 
+                  className="form-control"
+                  value={blockEndTime}
+                  onChange={(e) => setBlockEndTime(e.target.value)}
+                  style={{ backgroundColor: 'var(--bg-dark)', border: '1px solid var(--border-color)', color: 'white' }}
+                >
+                  {Array.from({ length: 29 }).map((_, idx) => {
+                    const totalMins = 510 + idx * 30;
+                    const hours = Math.floor(totalMins / 60);
+                    const minutes = totalMins % 60;
+                    const ampm = hours >= 12 ? 'PM' : 'AM';
+                    const displayHours = hours % 12 === 0 ? 12 : hours % 12;
+                    const displayMins = String(minutes).padStart(2, '0');
+                    const tStr = `${String(displayHours).padStart(2, '0')}:${displayMins} ${ampm}`;
+                    return <option key={idx} value={tStr}>{tStr}</option>;
+                  })}
+                </select>
+              </div>
+            </div>
+            
+            <div className="form-group" style={{ marginBottom: '1rem' }}>
+              <label style={{ color: 'white', fontSize: '0.85rem', marginBottom: '0.4rem', display: 'block' }}>Block Type</label>
+              <select 
+                className="form-control" 
+                value={blockType} 
+                onChange={(e) => setBlockType(e.target.value)}
+                style={{ backgroundColor: 'var(--bg-dark)', border: '1px solid var(--border-color)', color: 'white' }}
+              >
+                <option value="general_block">🚫 Unavailable (General Block)</option>
+                <option value="personal_training">🏋️ Competition Prep / Coaching Focus</option>
+              </select>
+            </div>
+            
+            <div className="form-group" style={{ marginBottom: '1.5rem' }}>
+              <label style={{ color: 'white', fontSize: '0.85rem', marginBottom: '0.4rem', display: 'block' }}>Description / Notes (Optional)</label>
+              <textarea 
+                className="form-control" 
+                rows="3"
+                value={blockDescription}
+                onChange={(e) => setBlockDescription(e.target.value)}
+                placeholder="Add details about this block..."
+                style={{ backgroundColor: 'var(--bg-dark)', border: '1px solid var(--border-color)', color: 'white', resize: 'vertical' }}
+              />
+            </div>
+            
+            <div style={{ display: 'flex', gap: '0.75rem', borderTop: '1px solid var(--border-color)', paddingTop: '1.5rem' }}>
+              <button type="button" className="btn btn-secondary" style={{ flex: 1 }} onClick={() => setCreationSlot(null)}>
+                Cancel
+              </button>
+              <button type="submit" className="btn btn-primary" style={{ flex: 2 }}>
+                Save Block
+              </button>
+            </div>
+          </form>
         </div>
       </div>
     );
@@ -457,11 +797,12 @@ export default function TrainerDashboard({ setActiveSection }) {
     const mobileDates = get14Days();
     const activeDayItem = mobileDates.find(d => d.dateKey === calDay) || mobileDates[0];
     
-    // Format the date title at top
     const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
     const activeDateTitle = activeDayItem 
       ? `${activeDayItem.dayName} ${activeDayItem.dateNum} ${months[activeDayItem.fullDateObj.getMonth()]} ${activeDayItem.fullDateObj.getFullYear()}` 
       : '';
+
+    const dayEvents = getCalendarEventsForDay(calDay);
 
     return (
       <div className="mobile-classes-wrapper" style={{ padding: 0 }}>
@@ -484,251 +825,224 @@ export default function TrainerDashboard({ setActiveSection }) {
           })}
         </div>
 
-        <div className="mobile-day-title" style={{ marginBottom: '1rem', color: 'white', fontWeight: '700' }}>
-          {activeDateTitle}
+        {/* Selected Day Title & Quick Block Button */}
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+          <div className="mobile-day-title" style={{ color: 'white', fontWeight: '700', fontSize: '1.05rem' }}>
+            {activeDateTitle}
+          </div>
+          <button
+            className="btn btn-primary"
+            style={{ padding: '0.4rem 0.8rem', fontSize: '0.8rem', display: 'flex', alignItems: 'center', gap: '0.25rem' }}
+            onClick={() => setCreationSlot({ day: calDay, time: '10:00 AM' })}
+          >
+            ➕ Block Time
+          </button>
         </div>
 
+        {/* Agenda Events List */}
         <div className="mobile-classes-list" style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-          {times.map(time => {
-            // Find booking using matchesDay helper
-            const booking = scheduledSessions.find(
-              b => b.time.toLowerCase() === time.toLowerCase() && matchesDay(b.day, calDay)
-            );
-
-            // Find block using matchesDay helper
-            const block = trainerBlocks.find(
-              b => b.trainerId === activeTrainer.id && b.time.toLowerCase() === time.toLowerCase() && matchesDay(b.day, calDay)
-            );
-
-            const isEnrolled = !!booking;
-            const isBlocked = !!block;
-            const isComp = block?.type === 'personal_training';
-
-            return (
-              <div 
-                key={time}
-                className={`mobile-class-row ${isEnrolled ? 'booked' : ''}`}
-                onClick={() => setSelectedSlot({ day: calDay, time })}
-                style={{ padding: '1rem', borderRadius: '1rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', backgroundColor: isEnrolled ? 'var(--primary-glow)' : 'var(--bg-card)', border: '1px solid var(--border-color)', cursor: 'pointer' }}
-              >
-                {/* Time info */}
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
-                  <span style={{ color: 'white', fontWeight: '700', fontSize: '0.9rem' }}>{time}</span>
-                  <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>PT Session Slot</span>
-                </div>
-
-                {/* Status and Title */}
-                <div style={{ flex: 1, paddingLeft: '1.5rem' }}>
-                  <div style={{ color: 'white', fontWeight: '600', fontSize: '0.9rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-                    {booking ? '👤 Booked' : block ? (isComp ? '🏋️ Comp Prep' : '🚫 Blocked') : '🟢 Available'}
+          {dayEvents.length > 0 ? (
+            dayEvents.map(event => {
+              const isClass = event.type === 'class';
+              const isBooking = event.type === 'booking';
+              const isBlock = event.type === 'block';
+              
+              let accentColor = '#6366f1'; // Class indigo
+              if (isBooking) accentColor = '#14b8a6'; // Booking teal
+              else if (isBlock && event.eventObj.type === 'personal_training') accentColor = '#f59e0b'; // Comp orange
+              else if (isBlock) accentColor = '#9ca3af'; // Block gray
+              
+              return (
+                <div 
+                  key={event.id}
+                  className="mobile-class-row"
+                  onClick={() => setSelectedSlot({ type: event.type, event: event.eventObj })}
+                  style={{ 
+                    padding: '1rem', 
+                    borderRadius: '1rem', 
+                    display: 'flex', 
+                    flexDirection: 'column', 
+                    gap: '0.5rem', 
+                    backgroundColor: 'var(--bg-card)', 
+                    border: '1px solid var(--border-color)', 
+                    borderLeft: `4px solid ${accentColor}`,
+                    cursor: 'pointer' 
+                  }}
+                >
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                      <span style={{ fontSize: '1.1rem' }}>{event.emoji}</span>
+                      <strong style={{ color: 'white', fontSize: '0.95rem' }}>{event.title}</strong>
+                    </div>
+                    
+                    <span style={{ fontSize: '0.75rem', fontWeight: '700', color: accentColor, textTransform: 'uppercase' }}>
+                      {event.type}
+                    </span>
                   </div>
-                  {booking && (
-                    <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', marginTop: '0.2rem' }}>
-                      Client: {booking.memberName}
-                    </div>
-                  )}
-                  {block && (
-                    <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', marginTop: '0.2rem' }}>
-                      {block.label}
-                    </div>
-                  )}
+                  
+                  <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
+                    {event.subtitle}
+                  </div>
+                  
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '0.25rem', borderTop: '1px solid rgba(255,255,255,0.03)', paddingTop: '0.5rem', fontSize: '0.75rem', color: 'var(--text-secondary)' }}>
+                    <span style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                        <circle cx="12" cy="12" r="9" />
+                        <path d="M12 6v6l4 2" />
+                      </svg>
+                      {event.startTime} - {event.endTime}
+                    </span>
+                    
+                    <span style={{ color: accentColor, fontWeight: '700' }}>
+                      View Details &rarr;
+                    </span>
+                  </div>
                 </div>
-
-                {/* Action button */}
-                <div>
-                  {isEnrolled ? (
-                    <button 
-                      className="mobile-action-btn booked"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        cancelPtBooking(booking.id);
-                      }}
-                      style={{ background: 'none', border: 'none', color: '#ef4444', cursor: 'pointer' }}
-                    >
-                      <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="3" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M6 18 18 6M6 6l12 12" />
-                      </svg>
-                    </button>
-                  ) : isBlocked ? (
-                    <button 
-                      className="mobile-action-btn booked"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        removeTrainerBlock(activeTrainer.id, calDay, time);
-                      }}
-                      style={{ background: 'none', border: 'none', color: '#9ca3af', cursor: 'pointer' }}
-                    >
-                      <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="3" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 12h-15" />
-                      </svg>
-                    </button>
-                  ) : (
-                    <button 
-                      className="mobile-action-btn unbooked"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setSelectedSlot({ day: calDay, time });
-                      }}
-                      style={{ background: 'none', border: 'none', color: 'var(--primary-color)', cursor: 'pointer' }}
-                    >
-                      <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="3" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
-                      </svg>
-                    </button>
-                  )}
-                </div>
-              </div>
-            );
-          })}
+              );
+            })
+          ) : (
+            <div style={{ padding: '3rem 1.5rem', textAlign: 'center', backgroundColor: 'var(--bg-card)', border: '1px dashed var(--border-color)', borderRadius: '1rem', color: 'var(--text-secondary)' }}>
+              <span style={{ fontSize: '2rem', display: 'block', marginBottom: '0.5rem' }}>🌴</span>
+              <p style={{ fontSize: '0.85rem' }}>No classes, PT sessions, or blocks scheduled for this day.</p>
+              <button
+                className="btn btn-secondary"
+                style={{ padding: '0.4rem 1rem', fontSize: '0.8rem', marginTop: '1rem' }}
+                onClick={() => setCreationSlot({ day: calDay, time: '10:00 AM' })}
+              >
+                Create Block
+              </button>
+            </div>
+          )}
         </div>
       </div>
     );
   };
 
   const renderDesktopSchedule = () => {
+    const daysList = get14Days();
+    
     return (
-      <div className="calendar-container">
-        <div className="calendar-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(14, minmax(220px, 1fr))', gap: '1rem', overflowX: 'auto' }}>
-          {get14Days().map(dayItem => {
+      <div className="teams-calendar-wrapper" style={{ display: 'flex', overflowX: 'auto', backgroundColor: '#16161c', borderRadius: '1rem', border: '1px solid var(--border-color)', padding: '1rem', position: 'relative' }}>
+        {/* Left Sticky Time Axis */}
+        <div style={{ width: '75px', flexShrink: 0, paddingTop: '60px', display: 'flex', flexDirection: 'column', borderRight: '1px solid rgba(255, 255, 255, 0.08)', backgroundColor: '#16161c', position: 'sticky', left: 0, zIndex: 20 }}>
+          {Array.from({ length: 14 }).map((_, idx) => {
+            const hour = 8 + idx;
+            const displayHour = hour === 12 ? '12 PM' : hour > 12 ? `${hour - 12} PM` : `${hour} AM`;
+            return (
+              <div key={idx} style={{ height: '60px', color: 'var(--text-secondary)', fontSize: '0.75rem', fontWeight: '700', textAlign: 'right', paddingRight: '0.75rem', paddingTop: '4px', boxSizing: 'border-box' }}>
+                {displayHour}
+              </div>
+            );
+          })}
+        </div>
+        
+        {/* Scrollable Column Grid */}
+        <div style={{ display: 'flex', flex: 1, minWidth: '2800px', backgroundColor: 'rgba(0,0,0,0.2)' }}>
+          {daysList.map(dayItem => {
             const isToday = dayItem.isToday;
+            const events = getCalendarEventsForDay(dayItem.dateKey);
 
             return (
-              <div key={dayItem.dateKey} className={`calendar-column ${isToday ? 'is-today' : ''}`}>
-                <div className="calendar-column-header">
-                  <span className="calendar-day-name">{dayItem.dayName}</span>
-                  <span className="calendar-day-label">
-                    <strong style={{ color: 'var(--text-primary)' }}>{dayItem.dateLabel}</strong>
-                    {isToday ? ' • Today' : ' • Gym Slot'}
+              <div key={dayItem.dateKey} style={{ flex: 1, display: 'flex', flexDirection: 'column', borderRight: '1px solid rgba(255, 255, 255, 0.05)', position: 'relative' }}>
+                {/* Column Header */}
+                <div style={{ height: '60px', borderBottom: '1px solid rgba(255, 255, 255, 0.08)', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', backgroundColor: isToday ? 'rgba(239, 68, 68, 0.05)' : 'transparent', borderTop: isToday ? '3px solid var(--primary-color)' : 'none', boxSizing: 'border-box' }}>
+                  <span style={{ fontSize: '0.85rem', fontWeight: '800', color: isToday ? 'var(--primary-color)' : 'white', textTransform: 'uppercase' }}>
+                    {dayItem.shortName}
+                  </span>
+                  <span style={{ fontSize: '0.75rem', color: isToday ? 'white' : 'var(--text-secondary)', fontWeight: isToday ? '700' : '400', marginTop: '0.1rem' }}>
+                    {dayItem.dateLabel}
                   </span>
                 </div>
-
-                {times.map(time => {
-                  // Find booking
-                  const booking = scheduledSessions.find(
-                    b => b.time.toLowerCase() === time.toLowerCase() && matchesDay(b.day, dayItem.dateKey)
-                  );
-
-                  // Find block
-                  const block = trainerBlocks.find(
-                    b => b.trainerId === activeTrainer.id && b.time.toLowerCase() === time.toLowerCase() && matchesDay(b.day, dayItem.dateKey)
-                  );
-
-                  const isEnrolled = !!booking;
-                  const isBlocked = !!block;
-                  const isComp = block?.type === 'personal_training';
-
-                  return (
-                    <div
-                      key={time}
-                      className={`calendar-class-card ${isEnrolled ? 'booked' : ''}`}
-                      onClick={() => setSelectedSlot({ day: dayItem.dateKey, time })}
-                    >
-                      <div className="calendar-card-time">
-                        <svg width="12" height="12" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
-                          <circle cx="12" cy="12" r="9" />
-                          <path d="M12 6v6l4 2" />
-                        </svg>
-                        <span>{time}</span>
+                
+                {/* Column Body with absolute positions */}
+                <div style={{ position: 'relative', height: '840px', backgroundColor: isToday ? 'rgba(255,255,255,0.01)' : 'transparent' }}>
+                  {/* Background Hourly Clickable Grid lines */}
+                  {Array.from({ length: 14 }).map((_, hourIdx) => {
+                    const hour = 8 + hourIdx;
+                    const displayHour = hour === 12 ? '12:00 PM' : hour > 12 ? `${hour - 12}:00 PM` : `${hour}:00 AM`;
+                    return (
+                      <div
+                        key={hourIdx}
+                        className="teams-hour-cell"
+                        style={{
+                          height: '60px',
+                          borderBottom: '1px solid rgba(255, 255, 255, 0.04)',
+                          boxSizing: 'border-box',
+                          position: 'relative',
+                          cursor: 'pointer'
+                        }}
+                        onClick={() => setCreationSlot({ day: dayItem.dateKey, time: displayHour })}
+                        title={`Click to block time at ${displayHour}`}
+                      >
+                        {/* 30-min dashed line */}
+                        <div style={{ position: 'absolute', top: '30px', left: 0, right: 0, borderBottom: '1px dashed rgba(255, 255, 255, 0.02)' }} />
                       </div>
+                    );
+                  })}
+                  
+                  {/* Event Cards */}
+                  {events.map(event => {
+                    const startMin = Math.max(480, Math.min(1320, event.startMin));
+                    const endMin = Math.max(480, Math.min(1320, event.endMin));
+                    const top = startMin - 480;
+                    const height = Math.max(30, endMin - startMin);
+                    
+                    let cardClass = 'teams-event-card';
+                    if (event.type === 'class') cardClass += ' class-card';
+                    else if (event.type === 'booking') cardClass += ' booking-card';
+                    else {
+                      cardClass += ' block-card';
+                      if (event.eventObj?.type === 'personal_training') {
+                        cardClass += ' comp-card';
+                      }
+                    }
 
-                      <div className="calendar-card-title">
-                        {booking ? '👤' : block ? (isComp ? '🏋️' : '🚫') : '🟢'} {booking ? `Booked` : block ? (isComp ? 'Comp Prep' : 'Blocked') : 'Available'}
-                      </div>
-
-                      <div className="calendar-card-meta">
-                        {booking ? (
-                          <>
-                            <span>
-                              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
-                                <circle cx="12" cy="7" r="4" />
+                    return (
+                      <div
+                        key={event.id}
+                        className={cardClass}
+                        style={{
+                          position: 'absolute',
+                          left: '4px',
+                          right: '4px',
+                          top: `${top}px`,
+                          height: `${height}px`,
+                          zIndex: 10,
+                          cursor: 'pointer'
+                        }}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setSelectedSlot({ type: event.type, event: event.eventObj });
+                        }}
+                      >
+                        <div className="card-content" style={{ height: '100%', display: 'flex', flexDirection: 'column', justifyContent: height >= 50 ? 'space-between' : 'center', padding: '0.4rem 0.6rem' }}>
+                          <div>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                              <span style={{ fontSize: '0.85rem' }}>{event.emoji}</span>
+                              <strong style={{ fontSize: '0.8rem', color: 'white' }}>{event.title}</strong>
+                            </div>
+                            
+                            {height >= 60 && (
+                              <div style={{ fontSize: '0.7rem', color: 'rgba(255,255,255,0.7)', marginTop: '0.2rem', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                                {event.subtitle}
+                              </div>
+                            )}
+                          </div>
+                          
+                          {height >= 45 && (
+                            <div style={{ fontSize: '0.68rem', color: 'rgba(255,255,255,0.6)', display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+                              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                                <circle cx="12" cy="12" r="9" />
+                                <path d="M12 6v6l4 2" />
                               </svg>
-                              {booking.memberName.split(' ').slice(-1)[0]}
-                            </span>
-                            <span>
-                              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                                <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
-                                <circle cx="12" cy="10" r="3" />
-                              </svg>
-                              Gym Floor
-                            </span>
-                          </>
-                        ) : block ? (
-                          <span>
-                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                              <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
-                              <path d="M7 11V7a5 5 0 0 1 10 0v4" />
-                            </svg>
-                            {block.label}
-                          </span>
-                        ) : (
-                          <span>
-                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                              <circle cx="12" cy="12" r="10" />
-                              <polyline points="12 6 12 12 16 14" />
-                            </svg>
-                            PT Coaching
-                          </span>
-                        )}
-                      </div>
-
-                      <div className="calendar-card-bottom">
-                        <div className="calendar-card-spots-col">
-                          {booking ? (
-                            <span className="spots-badge booked">Booked</span>
-                          ) : block ? (
-                            <span className="spots-badge full">{isComp ? 'Comp' : 'Blocked'}</span>
-                          ) : (
-                            <span className="spots-badge ok">Open</span>
-                          )}
-                        </div>
-
-                        <div className="calendar-card-action-col">
-                          {booking ? (
-                            <button
-                              className="calendar-action-btn booked"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                cancelPtBooking(booking.id);
-                              }}
-                              title="Cancel session"
-                            >
-                              <svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth="3" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18 18 6M6 6l12 12" />
-                              </svg>
-                            </button>
-                          ) : block ? (
-                            <button
-                              className="calendar-action-btn booked"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                removeTrainerBlock(activeTrainer.id, dayItem.dateKey, time);
-                              }}
-                              title="Unblock slot"
-                            >
-                              <svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth="3" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 12h-15" />
-                              </svg>
-                            </button>
-                          ) : (
-                            <button
-                              className="calendar-action-btn unbooked"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                setSelectedSlot({ day: dayItem.dateKey, time });
-                              }}
-                              title="Block slot"
-                            >
-                              <svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth="3" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
-                              </svg>
-                            </button>
+                              <span>{event.startTime} - {event.endTime}</span>
+                            </div>
                           )}
                         </div>
                       </div>
-                    </div>
-                  );
-                })}
+                    );
+                  })}
+                </div>
               </div>
             );
           })}
@@ -832,40 +1146,95 @@ export default function TrainerDashboard({ setActiveSection }) {
                 Assigned Clients ({assignedMembers.length})
               </h3>
               
-              {assignedMembers.length > 0 ? (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                  {assignedMembers.map((member) => (
-                    <div 
-                      key={member.email}
-                      className="card"
-                      style={{ 
-                        padding: '1.5rem', 
-                        cursor: 'pointer', 
-                        border: selectedMemberEmail === member.email ? '2px solid var(--primary-color)' : '1px solid var(--border-color)',
-                        backgroundColor: selectedMemberEmail === member.email ? 'var(--primary-glow)' : 'var(--bg-card)',
-                        transition: 'var(--transition-smooth)'
-                      }}
-                      onClick={() => handleSelectClient(member.email)}
+              {/* Search and Filters */}
+              <div className="card" style={{ padding: '1.25rem', marginBottom: '1.5rem', border: '1px solid var(--border-color)', display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                <div className="form-group" style={{ marginBottom: 0 }}>
+                  <label style={{ fontSize: '0.7rem', textTransform: 'uppercase', color: 'var(--text-secondary)' }}>Search Clients</label>
+                  <div style={{ position: 'relative' }}>
+                    <input 
+                      type="text" 
+                      className="form-control" 
+                      placeholder="Search by name or email..." 
+                      value={clientSearchQuery} 
+                      onChange={(e) => setClientSearchQuery(e.target.value)} 
+                      style={{ padding: '0.4rem 0.8rem 0.4rem 2rem', fontSize: '0.85rem', width: '100%', boxSizing: 'border-box' }}
+                    />
+                    <span style={{ position: 'absolute', left: '0.6rem', top: '50%', transform: 'translateY(-50%)', opacity: 0.5, fontSize: '0.9rem' }}>🔍</span>
+                  </div>
+                </div>
+                
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem' }}>
+                  <div className="form-group" style={{ marginBottom: 0 }}>
+                    <label style={{ fontSize: '0.7rem', textTransform: 'uppercase', color: 'var(--text-secondary)' }}>Subscription</label>
+                    <select 
+                      className="form-control" 
+                      value={clientFilterSubscription} 
+                      onChange={(e) => setClientFilterSubscription(e.target.value)}
+                      style={{ padding: '0.3rem', fontSize: '0.8rem', height: 'auto' }}
                     >
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                        <div>
-                          <strong style={{ fontSize: '1.1rem', color: 'white' }}>{member.name}</strong>
-                          <span style={{ display: 'block', fontSize: '0.8rem', color: 'var(--text-secondary)', marginTop: '0.2rem' }}>
-                            {member.email}
+                      <option value="all">All Packages</option>
+                      <option value="VIP">VIP Elite</option>
+                      <option value="Premium">Premium</option>
+                      <option value="Monthly">Monthly</option>
+                    </select>
+                  </div>
+                  
+                  <div className="form-group" style={{ marginBottom: 0 }}>
+                    <label style={{ fontSize: '0.7rem', textTransform: 'uppercase', color: 'var(--text-secondary)' }}>Credits</label>
+                    <select 
+                      className="form-control" 
+                      value={clientFilterCredits} 
+                      onChange={(e) => setClientFilterCredits(e.target.value)}
+                      style={{ padding: '0.3rem', fontSize: '0.8rem', height: 'auto' }}
+                    >
+                      <option value="all">All Credits</option>
+                      <option value="has_credits">Has Credits (&gt;0)</option>
+                      <option value="no_credits">No Credits (0)</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+
+              {assignedMembers.length > 0 ? (
+                filteredClients.length > 0 ? (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                    {filteredClients.map((member) => (
+                      <div 
+                        key={member.email}
+                        className="card"
+                        style={{ 
+                          padding: '1.5rem', 
+                          cursor: 'pointer', 
+                          border: selectedMemberEmail === member.email ? '2px solid var(--primary-color)' : '1px solid var(--border-color)',
+                          backgroundColor: selectedMemberEmail === member.email ? 'var(--primary-glow)' : 'var(--bg-card)',
+                          transition: 'var(--transition-smooth)'
+                        }}
+                        onClick={() => handleSelectClient(member.email)}
+                      >
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                          <div>
+                            <strong style={{ fontSize: '1.1rem', color: 'white' }}>{member.name}</strong>
+                            <span style={{ display: 'block', fontSize: '0.8rem', color: 'var(--text-secondary)', marginTop: '0.2rem' }}>
+                              {member.email}
+                            </span>
+                          </div>
+                          <span className="badge badge-primary" style={{ fontSize: '0.65rem' }}>
+                            {member.subscription}
                           </span>
                         </div>
-                        <span className="badge badge-primary" style={{ fontSize: '0.65rem' }}>
-                          {member.subscription}
-                        </span>
+                        
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '1rem', borderTop: '1px solid var(--border-color)', paddingTop: '0.75rem', fontSize: '0.85rem' }}>
+                          <span style={{ color: 'var(--text-secondary)' }}>Credits: <strong>{member.ptSessionsLeft} Left</strong></span>
+                          <span style={{ color: 'var(--primary-color)', fontWeight: '700' }}>Manage Programs &rarr;</span>
+                        </div>
                       </div>
-                      
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '1rem', borderTop: '1px solid var(--border-color)', paddingTop: '0.75rem', fontSize: '0.85rem' }}>
-                        <span style={{ color: 'var(--text-secondary)' }}>Credits: <strong>{member.ptSessionsLeft} Left</strong></span>
-                        <span style={{ color: 'var(--primary-color)', fontWeight: '700' }}>Manage Programs &rarr;</span>
-                      </div>
-                    </div>
-                  ))}
-                </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div style={{ backgroundColor: 'var(--bg-card)', border: '1px solid var(--border-color)', borderRadius: '1rem', padding: '2.5rem', textAlign: 'center', color: 'var(--text-secondary)' }}>
+                    <p>No clients match your filter criteria.</p>
+                  </div>
+                )
               ) : (
                 <div style={{ backgroundColor: 'var(--bg-card)', border: '1px solid var(--border-color)', borderRadius: '1rem', padding: '3.5rem', textAlign: 'center', color: 'var(--text-secondary)' }}>
                   <p>No members are currently assigned under your personal coaching plan.</p>
@@ -1093,6 +1462,206 @@ export default function TrainerDashboard({ setActiveSection }) {
                     </button>
                   </div>
 
+                  {/* CLIENT BEFORE/AFTER PROGRESS PHOTOS */}
+                  <div className="card" style={{ padding: '2rem', border: '1px solid var(--border-color)' }}>
+                    <div style={{ borderBottom: '1px solid var(--border-color)', paddingBottom: '1rem', marginBottom: '1.5rem' }}>
+                      <span style={{ color: 'var(--primary-color)', fontSize: '0.75rem', fontWeight: '700', textTransform: 'uppercase' }}>
+                        Transformations Gallery
+                      </span>
+                      <h3 style={{ color: 'white', marginTop: '0.25rem' }}>Before & After Photos</h3>
+                      <p style={{ color: 'var(--text-secondary)', fontSize: '0.85rem' }}>Track client progress visually over time.</p>
+                    </div>
+
+                    {/* Gallery list */}
+                    {selectedMember.progressPhotos && selectedMember.progressPhotos.length > 0 ? (
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem', marginBottom: '2.5rem' }}>
+                        {selectedMember.progressPhotos.map((set) => (
+                          <div key={set.id} style={{ border: '1px solid var(--border-color)', borderRadius: '1rem', padding: '1.25rem', backgroundColor: 'var(--bg-dark)' }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem', borderBottom: '1px dashed var(--border-color)', paddingBottom: '0.5rem' }}>
+                              <strong style={{ color: 'white', fontSize: '0.95rem' }}>📅 Date: {getFormattedDateFromKey(set.date) || set.date}</strong>
+                              <button 
+                                type="button"
+                                className="btn btn-danger" 
+                                style={{ padding: '0.2rem 0.5rem', fontSize: '0.7rem' }}
+                                onClick={() => deleteClientProgressPhotos(selectedMember.email, set.id)}
+                              >
+                                Delete Set 🗑️
+                              </button>
+                            </div>
+                            
+                            <div className="grid-2" style={{ gap: '1rem', marginBottom: '1rem' }}>
+                              {/* Before photo */}
+                              <div style={{ textAlign: 'center', position: 'relative' }}>
+                                <span style={{ position: 'absolute', top: '0.5rem', left: '0.5rem', backgroundColor: '#ef4444', color: 'white', fontSize: '0.65rem', padding: '0.15rem 0.4rem', borderRadius: '0.25rem', fontWeight: 'bold', zIndex: 5 }}>
+                                  BEFORE
+                                </span>
+                                <img 
+                                  src={set.before} 
+                                  alt="Before Progress" 
+                                  style={{ width: '100%', height: '180px', objectFit: 'cover', borderRadius: '0.5rem', border: '1px solid var(--border-color)' }} 
+                                />
+                              </div>
+
+                              {/* After photo */}
+                              <div style={{ textAlign: 'center', position: 'relative' }}>
+                                <span style={{ position: 'absolute', top: '0.5rem', left: '0.5rem', backgroundColor: '#10b981', color: 'white', fontSize: '0.65rem', padding: '0.15rem 0.4rem', borderRadius: '0.25rem', fontWeight: 'bold', zIndex: 5 }}>
+                                  AFTER
+                                </span>
+                                <img 
+                                  src={set.after} 
+                                  alt="After Progress" 
+                                  style={{ width: '100%', height: '180px', objectFit: 'cover', borderRadius: '0.5rem', border: '1px solid var(--border-color)' }} 
+                                />
+                              </div>
+                            </div>
+                            
+                            {set.notes && (
+                              <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', fontStyle: 'italic', borderTop: '1px dashed var(--border-color)', paddingTop: '0.5rem', marginTop: '0.5rem' }}>
+                                💬 Notes: {set.notes}
+                              </div>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <div style={{ padding: '2rem 1rem', textAlign: 'center', backgroundColor: 'rgba(255,255,255,0.01)', border: '1px dashed var(--border-color)', borderRadius: '0.75rem', color: 'var(--text-secondary)', fontSize: '0.85rem', marginBottom: '2rem' }}>
+                        No transformation photos uploaded for this client yet.
+                      </div>
+                    )}
+
+                    {/* Upload progress set form */}
+                    <div style={{ borderTop: '1px solid var(--border-color)', paddingTop: '1.5rem' }}>
+                      <h4 style={{ fontSize: '1.05rem', color: 'white', marginBottom: '1.25rem' }}>➕ Add New Progress Set</h4>
+                      
+                      <div className="grid-2" style={{ gap: '1rem', marginBottom: '1rem' }}>
+                        {/* Before Upload */}
+                        <div>
+                          <label style={{ fontSize: '0.75rem', fontWeight: 'bold', color: 'white', display: 'block', marginBottom: '0.25rem' }}>Before Image</label>
+                          <input 
+                            type="file" 
+                            accept="image/*" 
+                            onChange={(e) => {
+                              const file = e.target.files[0];
+                              if (file) {
+                                const reader = new FileReader();
+                                reader.onloadend = () => {
+                                  compressImage(reader.result, (compressed) => setBeforePreview(compressed));
+                                };
+                                reader.readAsDataURL(file);
+                              }
+                            }}
+                            style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', marginBottom: '0.5rem', display: 'block' }}
+                          />
+                          <span style={{ fontSize: '0.7rem', color: 'var(--text-secondary)', display: 'block', marginBottom: '0.25rem' }}>Or paste image URL:</span>
+                          <input 
+                            type="text" 
+                            className="form-control" 
+                            placeholder="https://..." 
+                            value={beforePreview.startsWith('data:') ? '' : beforePreview}
+                            onChange={(e) => setBeforePreview(e.target.value)}
+                            style={{ padding: '0.3rem', fontSize: '0.8rem' }}
+                          />
+                          {beforePreview && (
+                            <div style={{ marginTop: '0.5rem', position: 'relative' }}>
+                              <img src={beforePreview} alt="Before Preview" style={{ width: '100px', height: '100px', objectFit: 'cover', borderRadius: '0.25rem' }} />
+                              <button 
+                                type="button" 
+                                style={{ position: 'absolute', top: 0, left: '80px', background: 'rgba(0,0,0,0.6)', border: 'none', color: 'red', borderRadius: '50%', cursor: 'pointer', padding: '0.15rem 0.3rem', fontSize: '0.7rem' }}
+                                onClick={() => setBeforePreview('')}
+                              >
+                                X
+                              </button>
+                            </div>
+                          )}
+                        </div>
+
+                        {/* After Upload */}
+                        <div>
+                          <label style={{ fontSize: '0.75rem', fontWeight: 'bold', color: 'white', display: 'block', marginBottom: '0.25rem' }}>After Image</label>
+                          <input 
+                            type="file" 
+                            accept="image/*" 
+                            onChange={(e) => {
+                              const file = e.target.files[0];
+                              if (file) {
+                                const reader = new FileReader();
+                                reader.onloadend = () => {
+                                  compressImage(reader.result, (compressed) => setAfterPreview(compressed));
+                                };
+                                reader.readAsDataURL(file);
+                              }
+                            }}
+                            style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', marginBottom: '0.5rem', display: 'block' }}
+                          />
+                          <span style={{ fontSize: '0.7rem', color: 'var(--text-secondary)', display: 'block', marginBottom: '0.25rem' }}>Or paste image URL:</span>
+                          <input 
+                            type="text" 
+                            className="form-control" 
+                            placeholder="https://..." 
+                            value={afterPreview.startsWith('data:') ? '' : afterPreview}
+                            onChange={(e) => setAfterPreview(e.target.value)}
+                            style={{ padding: '0.3rem', fontSize: '0.8rem' }}
+                          />
+                          {afterPreview && (
+                            <div style={{ marginTop: '0.5rem', position: 'relative' }}>
+                              <img src={afterPreview} alt="After Preview" style={{ width: '100px', height: '100px', objectFit: 'cover', borderRadius: '0.25rem' }} />
+                              <button 
+                                type="button" 
+                                style={{ position: 'absolute', top: 0, left: '80px', background: 'rgba(0,0,0,0.6)', border: 'none', color: 'red', borderRadius: '50%', cursor: 'pointer', padding: '0.15rem 0.3rem', fontSize: '0.7rem' }}
+                                onClick={() => setAfterPreview('')}
+                              >
+                                X
+                              </button>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+
+                      <div className="grid-2" style={{ gap: '1rem', marginBottom: '1rem' }}>
+                        <div className="form-group" style={{ marginBottom: 0 }}>
+                          <label style={{ fontSize: '0.75rem' }}>Progress Date</label>
+                          <input 
+                            type="date" 
+                            className="form-control" 
+                            value={photoDate} 
+                            onChange={(e) => setPhotoDate(e.target.value)} 
+                            style={{ padding: '0.4rem', fontSize: '0.85rem' }}
+                          />
+                        </div>
+                        <div className="form-group" style={{ marginBottom: 0 }}>
+                          <label style={{ fontSize: '0.75rem' }}>Notes / Progress Label</label>
+                          <input 
+                            type="text" 
+                            className="form-control" 
+                            placeholder="e.g. Week 4 Checkin" 
+                            value={photoNotes} 
+                            onChange={(e) => setPhotoNotes(e.target.value)} 
+                            style={{ padding: '0.4rem', fontSize: '0.85rem' }}
+                          />
+                        </div>
+                      </div>
+
+                      <button 
+                        type="button" 
+                        className="btn btn-primary" 
+                        onClick={() => {
+                          if (!beforePreview || !afterPreview) {
+                            alert('Please select or paste images for both Before and After states.');
+                            return;
+                          }
+                          addClientProgressPhotos(selectedMember.email, photoDate, beforePreview, afterPreview, photoNotes);
+                          setBeforePreview('');
+                          setAfterPreview('');
+                          setPhotoNotes('');
+                          alert('Progress photo set added successfully!');
+                        }}
+                        style={{ width: '100%', padding: '0.5rem', fontWeight: '700', marginBottom: '2rem' }}
+                      >
+                        💾 Save Transformation Set
+                      </button>
+                    </div>
+                  </div>
+
                   {/* AUTO WHATSAPP PORTAL */}
                   <div className="card" style={{ padding: '2rem', border: '1px solid var(--border-color)' }}>
                     <h4 style={{ fontSize: '1.1rem', color: 'white', marginBottom: '1rem' }}>
@@ -1274,6 +1843,7 @@ export default function TrainerDashboard({ setActiveSection }) {
 
         {/* Trainer slot details modal */}
         {renderSlotModal()}
+        {renderCreateBlockModal()}
       </div>
     </div>
   );

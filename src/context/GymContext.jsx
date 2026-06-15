@@ -158,6 +158,94 @@ const DEFAULT_CLASSES = [
   { id: 'c14', name: 'Athlete Peak Performance Prep', day: 'Sunday', time: '10:00 AM - 11:30 AM', trainer: 'Coach Marcus Lim', room: 'Gym Floor', capacity: 15, enrolled: [] }
 ];
 
+// Standalone utility helpers for time calculations and overlapping check
+export const parseTimeToMinutes = (timeStr) => {
+  if (!timeStr) return 0;
+  const match = timeStr.trim().match(/^(\d{1,2}):(\d{2})\s*(AM|PM)$/i);
+  if (!match) {
+    const simpleMatch = timeStr.trim().match(/^(\d{1,2})\s*(AM|PM)$/i);
+    if (simpleMatch) {
+      let hours = parseInt(simpleMatch[1], 10);
+      const ampm = simpleMatch[2].toUpperCase();
+      if (ampm === 'PM' && hours < 12) hours += 12;
+      if (ampm === 'AM' && hours === 12) hours = 0;
+      return hours * 60;
+    }
+    return 0;
+  }
+  let hours = parseInt(match[1], 10);
+  const minutes = parseInt(match[2], 10);
+  const ampm = match[3].toUpperCase();
+  if (ampm === 'PM' && hours < 12) hours += 12;
+  if (ampm === 'AM' && hours === 12) hours = 0;
+  return hours * 60 + minutes;
+};
+
+export const parseTimeRange = (rangeStr) => {
+  if (!rangeStr) return { start: 0, end: 0 };
+  const parts = rangeStr.split('-');
+  if (parts.length === 2) {
+    return {
+      start: parseTimeToMinutes(parts[0]),
+      end: parseTimeToMinutes(parts[1])
+    };
+  }
+  const start = parseTimeToMinutes(rangeStr);
+  return { start, end: start + 60 }; // default 1 hour PT session
+};
+
+export const addOneHour = (timeStr) => {
+  const mins = parseTimeToMinutes(timeStr);
+  const newMins = mins + 60;
+  const hours = Math.floor(newMins / 60) % 24;
+  const minutes = newMins % 60;
+  const ampm = hours >= 12 ? 'PM' : 'AM';
+  const displayHours = hours % 12 === 0 ? 12 : hours % 12;
+  const displayMins = String(minutes).padStart(2, '0');
+  return `${String(displayHours).padStart(2, '0')}:${displayMins} ${ampm}`;
+};
+
+export const isTimeRangeOverlapping = (start1, end1, start2, end2) => {
+  const s1 = parseTimeToMinutes(start1);
+  const e1 = parseTimeToMinutes(end1);
+  const s2 = parseTimeToMinutes(start2);
+  const e2 = parseTimeToMinutes(end2);
+  return s1 < e2 && s2 < e1;
+};
+
+export const matchesDay = (dayA, dayB) => {
+  if (!dayA || !dayB) return false;
+  const cleanA = dayA.trim().toLowerCase();
+  const cleanB = dayB.trim().toLowerCase();
+  if (cleanA === cleanB) return true;
+  
+  const dayNames = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
+  
+  const getWeekday = (str) => {
+    const parts = str.split('-');
+    if (parts.length === 3) {
+      const year = parseInt(parts[0], 10);
+      const month = parseInt(parts[1], 10) - 1;
+      const day = parseInt(parts[2], 10);
+      const d = new Date(year, month, day);
+      return dayNames[d.getDay()];
+    }
+    const d = new Date(str);
+    if (!isNaN(d.getTime())) {
+      return dayNames[d.getDay()];
+    }
+    return null;
+  };
+
+  const weekdayA = dayNames.includes(cleanA) ? cleanA : getWeekday(dayA);
+  const weekdayB = dayNames.includes(cleanB) ? cleanB : getWeekday(dayB);
+  
+  if (weekdayA && weekdayB) {
+    return weekdayA === weekdayB;
+  }
+  return false;
+};
+
 export const GymProvider = ({ children }) => {
   // Migration to clear old keys to load new competition-focused seed data
   if ((localStorage.getItem('bf_settings') || localStorage.getItem('bf_v1_settings') || localStorage.getItem('bf_v2_settings')) && !localStorage.getItem('bf_v3_settings')) {
@@ -555,21 +643,37 @@ export const GymProvider = ({ children }) => {
       return false;
     }
 
-    // RULE 4: Check if the timing is already booked (double booking)
+    // RULE 4: Check if the timing overlaps with an existing booked session (double booking)
+    const sessionStart = time;
+    const sessionEnd = addOneHour(time);
+
     const isTrainerBooked = ptBookings.some(
-      b => b.trainerId === coach.id && b.day.toLowerCase() === day.toLowerCase() && b.time.toLowerCase() === time.toLowerCase()
+      b => b.trainerId === coach.id && matchesDay(b.day, day) && 
+        isTimeRangeOverlapping(b.time, addOneHour(b.time), sessionStart, sessionEnd)
     );
     if (isTrainerBooked) {
-      alert(`Coach ${coach.name} is already booked on ${day} at ${time}. Please select a different time slot.`);
+      alert(`Coach ${coach.name} is already booked on ${day} around this time range (${sessionStart} - ${sessionEnd}). Please select a different time slot.`);
       return false;
     }
 
-    // RULE 5: Check if timing is blocked by trainer
+    // RULE 5: Check if timing overlaps with a block by trainer
     const isTrainerBlocked = trainerBlocks.some(
-      b => b.trainerId === coach.id && b.day.toLowerCase() === day.toLowerCase() && b.time.toLowerCase() === time.toLowerCase()
+      b => b.trainerId === coach.id && matchesDay(b.day, day) &&
+        isTimeRangeOverlapping(b.startTime || b.time, b.endTime || addOneHour(b.startTime || b.time), sessionStart, sessionEnd)
     );
     if (isTrainerBlocked) {
-      alert(`Coach ${coach.name} has blocked this time slot (${day} at ${time}) and is unavailable.`);
+      alert(`Coach ${coach.name} has blocked this time slot or is unavailable during this range.`);
+      return false;
+    }
+
+    // RULE 6: Check if timing overlaps with a gym class coached by trainer
+    const isCoachingClass = timetable.some(
+      c => c.trainer.toLowerCase() === coach.name.toLowerCase() && matchesDay(c.day, day) && (
+        isTimeRangeOverlapping(c.time.split('-')[0], c.time.split('-')[1], sessionStart, sessionEnd)
+      )
+    );
+    if (isCoachingClass) {
+      alert(`Coach ${coach.name} is coaching a class at this time and is unavailable.`);
       return false;
     }
 
@@ -658,29 +762,118 @@ export const GymProvider = ({ children }) => {
   };
 
   // Trainer function: Add availability block
-  const addTrainerBlock = (trainerId, day, time, type = 'general_block', label = 'Unavailable') => {
-    const alreadyBlocked = trainerBlocks.some(
-      b => b.trainerId === trainerId && b.day.toLowerCase() === day.toLowerCase() && b.time.toLowerCase() === time.toLowerCase()
-    );
-    if (alreadyBlocked) return;
-
-    // Check if there is already a booked session at this slot
-    const hasBooking = ptBookings.some(
-      b => b.trainerId === trainerId && b.day.toLowerCase() === day.toLowerCase() && b.time.toLowerCase() === time.toLowerCase()
-    );
-    if (hasBooking) {
-      alert('Cannot block a time slot that already has a member booking scheduled.');
-      return;
+  const addTrainerBlock = (trainerId, day, startTime, param3, param4, param5, param6) => {
+    // Check if param3 is an end time string (e.g. contains AM/PM)
+    const isParam3Time = typeof param3 === 'string' && /AM|PM/i.test(param3);
+    
+    let endTime, type, label, description;
+    if (isParam3Time) {
+      endTime = param3;
+      type = param4 || 'general_block';
+      label = param5 || 'Unavailable';
+      description = param6 || '';
+    } else {
+      endTime = addOneHour(startTime);
+      type = param3 || 'general_block';
+      label = param4 || 'Unavailable';
+      description = param5 || '';
     }
 
-    setTrainerBlocks(prev => [...prev, { trainerId, day, time, type, label }]);
+    if (!startTime || !endTime) {
+      alert('Start time and End time are required.');
+      return false;
+    }
+
+    const startMins = parseTimeToMinutes(startTime);
+    const endMins = parseTimeToMinutes(endTime);
+    if (startMins >= endMins) {
+      alert('End time must be after start time.');
+      return false;
+    }
+
+    const coach = trainers.find(t => t.id === trainerId);
+    const trainerName = coach?.name || '';
+
+    // Check overlaps with PT bookings
+    const hasBooking = ptBookings.some(
+      b => b.trainerId === trainerId && matchesDay(b.day, day) &&
+        isTimeRangeOverlapping(b.time, addOneHour(b.time), startTime, endTime)
+    );
+    if (hasBooking) {
+      alert('Cannot block a time range that already has a member booking scheduled.');
+      return false;
+    }
+
+    // Check overlaps with classes
+    const hasClass = timetable.some(
+      c => c.trainer.toLowerCase() === trainerName.toLowerCase() && matchesDay(c.day, day) &&
+        isTimeRangeOverlapping(c.time.split('-')[0], c.time.split('-')[1], startTime, endTime)
+    );
+    if (hasClass) {
+      alert('Cannot block a time range that overlaps with your scheduled gym classes.');
+      return false;
+    }
+
+    // Check overlaps with existing blocks to avoid duplicate/redundant overlapping blocks
+    const alreadyBlocked = trainerBlocks.some(
+      b => b.trainerId === trainerId && matchesDay(b.day, day) &&
+        isTimeRangeOverlapping(b.startTime || b.time, b.endTime || addOneHour(b.startTime || b.time), startTime, endTime)
+    );
+    if (alreadyBlocked) {
+      alert('This time range overlaps with an existing block.');
+      return false;
+    }
+
+    const newBlock = {
+      id: 'block_' + Date.now(),
+      trainerId,
+      day,
+      time: startTime, // compatibility
+      startTime,
+      endTime,
+      type,
+      label,
+      description
+    };
+
+    setTrainerBlocks(prev => [...prev, newBlock]);
+    return true;
   };
 
   // Trainer function: Remove availability block
   const removeTrainerBlock = (trainerId, day, time) => {
     setTrainerBlocks(prev => prev.filter(
-      b => !(b.trainerId === trainerId && b.day.toLowerCase() === day.toLowerCase() && b.time.toLowerCase() === time.toLowerCase())
+      b => !(b.trainerId === trainerId && matchesDay(b.day, day) && (b.time.toLowerCase() === time.toLowerCase() || (b.startTime && b.startTime.toLowerCase() === time.toLowerCase())))
     ));
+  };
+
+  // Trainer function: Add client progress photos
+  const addClientProgressPhotos = (memberEmail, date, beforePhoto, afterPhoto, notes) => {
+    setMembers(prev => prev.map(m => {
+      if (m.email.toLowerCase() === memberEmail.toLowerCase()) {
+        const progressPhotos = m.progressPhotos || [];
+        const newSet = {
+          id: 'set_' + Date.now(),
+          date,
+          before: beforePhoto,
+          after: afterPhoto,
+          notes
+        };
+        return { ...m, progressPhotos: [...progressPhotos, newSet] };
+      }
+      return m;
+    }));
+  };
+
+  // Trainer function: Delete client progress photos
+  const deleteClientProgressPhotos = (memberEmail, setId) => {
+    setMembers(prev => prev.map(m => {
+      if (m.email.toLowerCase() === memberEmail.toLowerCase()) {
+        const progressPhotos = m.progressPhotos || [];
+        return { ...m, progressPhotos: progressPhotos.filter(p => p.id !== setId) };
+      }
+      return m;
+    }));
   };
 
   // Book a free trial class for guest user
@@ -841,6 +1034,13 @@ export const GymProvider = ({ children }) => {
       updateTrainingPlan,
       updateMealPlan,
       updateTrainerProfile,
+      parseTimeToMinutes,
+      parseTimeRange,
+      addOneHour,
+      isTimeRangeOverlapping,
+      matchesDay,
+      addClientProgressPhotos,
+      deleteClientProgressPhotos,
       addTrainerBlock,
       removeTrainerBlock,
       resetToDefault
