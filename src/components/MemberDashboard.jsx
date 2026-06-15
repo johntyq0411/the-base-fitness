@@ -179,6 +179,54 @@ export default function MemberDashboard({ setActiveSection }) {
           </div>
         )}
 
+        {/* Supplement Shop Promo Card */}
+        <div style={{
+          background: 'linear-gradient(135deg, #0d0d0d 0%, #1a0505 60%, #0d0d0d 100%)',
+          border: '1px solid rgba(220, 38, 38, 0.25)',
+          borderRadius: '16px',
+          padding: '1.5rem',
+          marginBottom: '2.5rem',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          gap: '1.25rem',
+          flexWrap: 'wrap',
+          boxShadow: '0 4px 24px rgba(220, 38, 38, 0.08)',
+          position: 'relative',
+          overflow: 'hidden'
+        }}>
+          <div style={{ position: 'absolute', right: '-20px', top: '-20px', width: '120px', height: '120px', borderRadius: '50%', background: 'radial-gradient(circle, rgba(220,38,38,0.1) 0%, transparent 70%)', pointerEvents: 'none' }} />
+          <div style={{ position: 'relative', zIndex: 1 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.5rem' }}>
+              <span style={{ fontSize: '1.5rem' }}>🧪</span>
+              <div>
+                <div style={{ fontSize: '0.65rem', letterSpacing: '0.15em', color: 'rgba(220,38,38,0.8)', fontWeight: '800', textTransform: 'uppercase' }}>Member Exclusive</div>
+                <div style={{ fontFamily: 'var(--font-display)', fontSize: '1.1rem', color: 'white', fontWeight: '800' }}>MUTANT® Supplement Shop</div>
+              </div>
+            </div>
+            <p style={{ margin: 0, fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
+              Official distributor — get exclusive member discounts on Whey, Mass, Creatine, ISO, BCAA & EAA
+            </p>
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', flexShrink: 0, position: 'relative', zIndex: 1 }}>
+            {profile.subscription && (
+              <div style={{ textAlign: 'center' }}>
+                <div style={{ fontSize: '1.75rem', fontWeight: '900', color: '#34d399', fontFamily: 'var(--font-display)', lineHeight: 1 }}>
+                  UP TO 20%
+                </div>
+                <div style={{ fontSize: '0.65rem', color: 'var(--text-secondary)', marginTop: '2px' }}>member savings</div>
+              </div>
+            )}
+            <button
+              className="btn btn-primary"
+              style={{ padding: '0.6rem 1.4rem', fontWeight: '700', borderRadius: '10px', fontSize: '0.85rem', flexShrink: 0 }}
+              onClick={() => setActiveSection('shop')}
+            >
+              Shop Now →
+            </button>
+          </div>
+        </div>
+
         {/* Training & Meal Plans Section */}
         {profile.subscription && profile.trainer && profile.trainer !== 'Pending Assignment' && (
           <div className="card" style={{ padding: '2rem', marginBottom: '2.5rem', border: '1px solid var(--border-color)', boxShadow: '0 8px 32px var(--shadow-color)' }}>

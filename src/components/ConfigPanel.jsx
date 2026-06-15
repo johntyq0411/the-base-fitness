@@ -18,8 +18,15 @@ export default function ConfigPanel({ setActiveSection }) {
     assignTrainerToMember,
     trialBookings,
     setTrialBookings,
+    supplements,
+    setSupplements,
+    supplementDiscounts,
+    setSupplementDiscounts,
     logout
   } = useContext(GymContext);
+
+  // Local supplement discount editing state
+  const [localDiscounts, setLocalDiscounts] = useState({ ...supplementDiscounts });
 
   const [activeTab, setActiveTab] = useState('general');
   const [isTabsDrawerOpen, setIsTabsDrawerOpen] = useState(false);
@@ -181,6 +188,12 @@ export default function ConfigPanel({ setActiveSection }) {
               onClick={() => setActiveTab('visuals')}
             >
               🎨 Theme & Brand
+            </button>
+            <button 
+              className={`config-tab-btn ${activeTab === 'supplements' ? 'active' : ''}`}
+              onClick={() => setActiveTab('supplements')}
+            >
+              🧪 Supplements
             </button>
             <button 
               className={`config-tab-btn ${activeTab === 'danger' ? 'active' : ''}`}
@@ -865,6 +878,106 @@ export default function ConfigPanel({ setActiveSection }) {
               </div>
             )}
 
+            {/* SUPPLEMENTS SETTINGS */}
+            {activeTab === 'supplements' && (
+              <div>
+                <div style={{ marginBottom: '2.5rem' }}>
+                  <h3 style={{ fontFamily: 'var(--font-display)', color: 'white', marginBottom: '0.5rem' }}>MUTANT® Member Discount Config</h3>
+                  <p style={{ color: 'var(--text-secondary)', fontSize: '0.85rem', marginBottom: '1.5rem' }}>
+                    Set the discount percentage (%) each membership tier receives on all supplement products. Changes take effect immediately for members.
+                  </p>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', maxWidth: '550px' }}>
+                    {Object.keys(localDiscounts).filter(k => k !== 'default').map(tier => (
+                      <div key={tier} style={{ display: 'flex', alignItems: 'center', gap: '1rem', background: 'rgba(255,255,255,0.03)', borderRadius: '10px', padding: '0.85rem 1rem', border: '1px solid rgba(255,255,255,0.07)' }}>
+                        <span style={{ flex: 1, color: 'white', fontSize: '0.85rem', fontWeight: '600' }}>{tier}</span>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                          <input
+                            type="number"
+                            min="0"
+                            max="50"
+                            value={localDiscounts[tier]}
+                            onChange={e => setLocalDiscounts(prev => ({ ...prev, [tier]: Number(e.target.value) }))}
+                            className="form-control"
+                            style={{ width: '70px', padding: '0.4rem 0.6rem', textAlign: 'center' }}
+                          />
+                          <span style={{ color: 'var(--text-secondary)', fontSize: '0.85rem' }}>%</span>
+                        </div>
+                      </div>
+                    ))}
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', background: 'rgba(255,255,255,0.02)', borderRadius: '10px', padding: '0.85rem 1rem', border: '1px dashed rgba(255,255,255,0.07)' }}>
+                      <span style={{ flex: 1, color: 'var(--text-secondary)', fontSize: '0.85rem' }}>Default (no subscription / unmatched tier)</span>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                        <input
+                          type="number"
+                          min="0"
+                          max="50"
+                          value={localDiscounts['default'] || 5}
+                          onChange={e => setLocalDiscounts(prev => ({ ...prev, 'default': Number(e.target.value) }))}
+                          className="form-control"
+                          style={{ width: '70px', padding: '0.4rem 0.6rem', textAlign: 'center' }}
+                        />
+                        <span style={{ color: 'var(--text-secondary)', fontSize: '0.85rem' }}>%</span>
+                      </div>
+                    </div>
+                  </div>
+                  <button
+                    className="btn btn-primary"
+                    style={{ marginTop: '1.25rem', padding: '0.7rem 1.75rem' }}
+                    onClick={() => { setSupplementDiscounts(localDiscounts); alert('Discount config saved!'); }}
+                  >
+                    Save Discount Config
+                  </button>
+                </div>
+
+                <div>
+                  <h3 style={{ fontFamily: 'var(--font-display)', color: 'white', marginBottom: '0.5rem' }}>Product Catalog</h3>
+                  <p style={{ color: 'var(--text-secondary)', fontSize: '0.85rem', marginBottom: '1.5rem' }}>
+                    Toggle product visibility, update retail prices, and manage product names.
+                  </p>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                    {supplements.map((sup, idx) => (
+                      <div key={sup.id} style={{ display: 'flex', alignItems: 'center', gap: '1rem', background: 'rgba(255,255,255,0.03)', borderRadius: '10px', padding: '0.85rem 1rem', border: `1px solid ${sup.visible ? 'rgba(255,255,255,0.07)' : 'rgba(239,68,68,0.2)'}`, flexWrap: 'wrap' }}>
+                        <img src={`${import.meta.env.BASE_URL}${sup.image}`} alt={sup.name} style={{ width: '48px', height: '48px', objectFit: 'cover', borderRadius: '8px', flexShrink: 0 }} />
+                        <div style={{ flex: 1, minWidth: '160px' }}>
+                          <div style={{ color: 'white', fontWeight: '700', fontSize: '0.9rem' }}>{sup.name}</div>
+                          <div style={{ color: 'var(--text-secondary)', fontSize: '0.75rem' }}>{sup.category} · {sup.weight}</div>
+                        </div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                          <span style={{ color: 'var(--text-secondary)', fontSize: '0.8rem' }}>RM</span>
+                          <input
+                            type="number"
+                            min="0"
+                            value={sup.price}
+                            onChange={e => setSupplements(prev => prev.map((s, i) => i === idx ? { ...s, price: Number(e.target.value) } : s))}
+                            className="form-control"
+                            style={{ width: '80px', padding: '0.4rem 0.6rem', textAlign: 'center' }}
+                          />
+                        </div>
+                        <button
+                          onClick={() => setSupplements(prev => prev.map((s, i) => i === idx ? { ...s, visible: !s.visible } : s))}
+                          style={{
+                            padding: '0.4rem 1rem',
+                            borderRadius: '20px',
+                            border: sup.visible ? '1px solid rgba(52,211,153,0.4)' : '1px solid rgba(239,68,68,0.4)',
+                            background: sup.visible ? 'rgba(52,211,153,0.1)' : 'rgba(239,68,68,0.1)',
+                            color: sup.visible ? '#34d399' : '#ef4444',
+                            fontSize: '0.78rem',
+                            cursor: 'pointer',
+                            fontWeight: '600'
+                          }}
+                        >
+                          {sup.visible ? '✓ Visible' : '✗ Hidden'}
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                  <p style={{ color: 'var(--text-secondary)', fontSize: '0.75rem', marginTop: '1rem' }}>
+                    ℹ️ Price changes auto-save. Toggle visibility to show/hide products in the member shop.
+                  </p>
+                </div>
+              </div>
+            )}
+
           </div>
 
         </div>
@@ -912,6 +1025,9 @@ export default function ConfigPanel({ setActiveSection }) {
             </button>
             <button className={`drawer-item ${activeTab === 'visuals' ? 'active' : ''}`} onClick={() => { setActiveTab('visuals'); setIsTabsDrawerOpen(false); }}>
               🎨 Theme & Brand
+            </button>
+            <button className={`drawer-item ${activeTab === 'supplements' ? 'active' : ''}`} onClick={() => { setActiveTab('supplements'); setIsTabsDrawerOpen(false); }}>
+              🧪 Supplements
             </button>
             <button className={`drawer-item ${activeTab === 'danger' ? 'active' : ''}`} onClick={() => { setActiveTab('danger'); setIsTabsDrawerOpen(false); }} style={{ color: '#ef4444' }}>
               ⚠️ Reset Database

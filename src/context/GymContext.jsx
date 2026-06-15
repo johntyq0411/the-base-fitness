@@ -39,6 +39,103 @@ export const THEMES = {
 
 // Initial Seed Data
 // Initial Seed Data
+
+// Mutant® Supplement Catalog
+const DEFAULT_SUPPLEMENTS = [
+  {
+    id: 'sup1',
+    name: 'MUTANT WHEY™',
+    category: 'Whey Protein',
+    categoryKey: 'whey',
+    image: 'mutant_whey.png',
+    price: 179,
+    weight: '2.27 kg (5 lbs)',
+    servings: 73,
+    description: 'A premium 5-protein blend delivering 22g protein per scoop. Fast & slow-digesting proteins for sustained muscle recovery and growth. NSF Certified.',
+    highlights: ['22g Protein per scoop', '5-Protein Blend', 'NSF Certified', 'Mixes Instantly'],
+    flavors: ['Chocolate', 'Vanilla', 'Strawberry', 'Triple Chocolate'],
+    visible: true
+  },
+  {
+    id: 'sup2',
+    name: 'MUTANT MASS®',
+    category: 'Mass Gainer',
+    categoryKey: 'mass',
+    image: 'mutant_mass.png',
+    price: 249,
+    weight: '6.8 kg (15 lbs)',
+    servings: 32,
+    description: 'The ultimate mass-building formula. 1100 calories and 52g protein per serving with complex carbs to fuel serious size gains. For hardgainers who train hard.',
+    highlights: ['1100 Calories per serving', '52g Protein', 'Complex Carb Matrix', 'Creatine Monohydrate included'],
+    flavors: ['Chocolate Fudge', 'Vanilla Ice Cream', 'Cookies & Cream'],
+    visible: true
+  },
+  {
+    id: 'sup3',
+    name: 'MUTANT CREAKONG® CX8',
+    category: 'Creatine',
+    categoryKey: 'creatine',
+    image: 'mutant_creatine.png',
+    price: 99,
+    weight: '300g',
+    servings: 60,
+    description: 'Next-level creatine complex featuring 8 forms of creatine for maximum absorption and muscle saturation. No loading phase required. Unflavored for versatile mixing.',
+    highlights: ['8-Form Creatine Complex', 'No Loading Phase', 'Maximizes Strength', 'Micronized for purity'],
+    flavors: ['Unflavored'],
+    visible: true
+  },
+  {
+    id: 'sup4',
+    name: 'MUTANT ISO SURGE™',
+    category: 'Iso Protein',
+    categoryKey: 'iso',
+    image: 'mutant_iso.png',
+    price: 199,
+    weight: '1.6 kg (3.5 lbs)',
+    servings: 50,
+    description: 'Ultra-pure whey isolate with 25g protein and under 1g fat per serving. Cold-filtered for maximum purity — ideal for cutting phases and lean muscle building.',
+    highlights: ['25g Isolate Protein', '<1g Fat per scoop', 'Cold-Filtered', 'Lactose Reduced'],
+    flavors: ['Chocolate', 'Chocolate Peanut Butter', 'Vanilla'],
+    visible: true
+  },
+  {
+    id: 'sup5',
+    name: 'MUTANT BCAA 9.7™',
+    category: 'BCAA',
+    categoryKey: 'bcaa',
+    image: 'mutant_bcaa.png',
+    price: 99,
+    weight: '348g',
+    servings: 30,
+    description: '9.7g of BCAAs in the clinically researched 2:1:1 ratio per serving, with added electrolytes and hydration support. Fuel performance and fight muscle breakdown.',
+    highlights: ['9.7g BCAAs per serving', '2:1:1 Leucine Ratio', 'Added Electrolytes', 'Intra-workout fuel'],
+    flavors: ['Fruit Punch', 'Blue Raspberry', 'Green Apple', 'Watermelon'],
+    visible: true
+  },
+  {
+    id: 'sup6',
+    name: 'MUTANT EAA™',
+    category: 'EAA',
+    categoryKey: 'eaa',
+    image: 'mutant_eaa.png',
+    price: 109,
+    weight: '390g',
+    servings: 30,
+    description: 'Complete Essential Amino Acid formula with all 9 EAAs your body cannot produce on its own. Supports muscle protein synthesis, recovery, and hydration throughout your training.',
+    highlights: ['All 9 Essential Amino Acids', 'Full Spectrum EAA Profile', 'Supports Muscle Synthesis', 'Anti-Catabolism'],
+    flavors: ['Watermelon', 'Orange Mango', 'Grape'],
+    visible: true
+  }
+];
+
+// Supplement Discount Config per Membership Tier
+const DEFAULT_SUPPLEMENT_DISCOUNTS = {
+  'Day Pass Access': 5,
+  'All-Access Monthly Membership': 10,
+  'Premium Strength & Competition Pass': 15,
+  'VIP Personal Coaching & Athlete Prep': 20,
+  'default': 5
+};
 const DEFAULT_GYM_SETTINGS = {
   name: 'The Base Fitness Kluang Johor',
   address: 'Jalan Bakawali, 81440 Kluang, Johor, Malaysia',
@@ -68,7 +165,7 @@ const DEFAULT_TRAINERS = [
     name: 'Coach Marcus Lim',
     specialties: ['Powerlifting & Bodybuilding Prep', 'Strength Training', 'Competition Coaching'],
     bio: 'Certified strength conditioning specialist and active competitive powerlifter. Passionate about posture correction, competitive compound lifting, and helping athletes prep for Johor powerlifting meets.',
-    photo: 'personal_training.png',
+    photo: 'coach_marcus.png',
     experienceYears: 8,
     certifications: ['ASCA Strength & Conditioning Coach L1', 'Certified Powerlifting Coach (USPA)', 'Functional Movement Screen (FMS) Certified'],
     achievements: ['Johor Powerlifting Open 2023 Gold Medalist (93kg)', 'Coached 15+ powerlifters to national podium finishes'],
@@ -80,7 +177,7 @@ const DEFAULT_TRAINERS = [
     name: 'Coach Sarah Wong',
     specialties: ['Bikini & Physique Prep', 'Weight Loss & HIIT', 'Yoga & Flexibility', 'Nutrition Coaching'],
     bio: 'Dedicated fitness therapist and nutrition prep specialist. Focuses on bikini competition styling, metabolic staging prep, and sustainable fat loss coaching for athletes.',
-    photo: 'hero.png',
+    photo: 'coach_sarah.png',
     experienceYears: 6,
     certifications: ['Precision Nutrition Level 1 (PN1) Certified', 'Certified Weight Loss Specialist (NASM)', 'RYT-200 Yoga Teacher'],
     achievements: ['Co-author of "Athlete Prep Nutrition Guide"', 'Fitness Speaker at Johor Wellness Summit 2024', 'Prep coach for 10+ Bikini category medalists'],
@@ -257,6 +354,18 @@ export const GymProvider = ({ children }) => {
     keysToRemove.forEach(k => localStorage.removeItem(k));
   }
 
+  // Migration: clear stale trainer photos if old placeholders are still in cache
+  const cachedTrainers = localStorage.getItem('bf_v3_trainers');
+  if (cachedTrainers) {
+    try {
+      const parsed = JSON.parse(cachedTrainers);
+      const hasOldPhotos = parsed.some(t => t.photo === 'personal_training.png' || t.photo === 'hero.png');
+      if (hasOldPhotos) {
+        localStorage.removeItem('bf_v3_trainers');
+      }
+    } catch(e) { localStorage.removeItem('bf_v3_trainers'); }
+  }
+
   // Load initial states from LocalStorage or Fallback to default seed data
   const [gymSettings, setGymSettings] = useState(() => {
     const saved = localStorage.getItem('bf_v3_settings');
@@ -381,6 +490,18 @@ export const GymProvider = ({ children }) => {
     return saved ? JSON.parse(saved) : [];
   });
 
+  // Supplement catalog state
+  const [supplements, setSupplements] = useState(() => {
+    const saved = localStorage.getItem('bf_v3_supplements');
+    return saved ? JSON.parse(saved) : DEFAULT_SUPPLEMENTS;
+  });
+
+  // Supplement discount config state
+  const [supplementDiscounts, setSupplementDiscounts] = useState(() => {
+    const saved = localStorage.getItem('bf_v3_supp_discounts');
+    return saved ? JSON.parse(saved) : DEFAULT_SUPPLEMENT_DISCOUNTS;
+  });
+
   // Synchronize state with LocalStorage and update theme
   useEffect(() => {
     localStorage.setItem('bf_v3_settings', JSON.stringify(gymSettings));
@@ -423,6 +544,14 @@ export const GymProvider = ({ children }) => {
   useEffect(() => {
     localStorage.setItem('bf_v3_trial_bookings', JSON.stringify(trialBookings));
   }, [trialBookings]);
+
+  useEffect(() => {
+    localStorage.setItem('bf_v3_supplements', JSON.stringify(supplements));
+  }, [supplements]);
+
+  useEffect(() => {
+    localStorage.setItem('bf_v3_supp_discounts', JSON.stringify(supplementDiscounts));
+  }, [supplementDiscounts]);
 
   // Auth Operations (Simulated)
   const login = (email, role) => {
@@ -919,6 +1048,8 @@ export const GymProvider = ({ children }) => {
       localStorage.removeItem('bf_v3_pt_bookings');
       localStorage.removeItem('bf_v3_trainer_blocks');
       localStorage.removeItem('bf_v3_trial_bookings');
+      localStorage.removeItem('bf_v3_supplements');
+      localStorage.removeItem('bf_v3_supp_discounts');
       
       setGymSettings(DEFAULT_GYM_SETTINGS);
       setTrainers(DEFAULT_TRAINERS);
@@ -998,6 +1129,8 @@ export const GymProvider = ({ children }) => {
         }
       ]);
       setCurrentUser({ email: null, role: 'guest', name: 'Guest' });
+      setSupplements(DEFAULT_SUPPLEMENTS);
+      setSupplementDiscounts(DEFAULT_SUPPLEMENT_DISCOUNTS);
       
       window.location.reload();
     }
@@ -1042,6 +1175,10 @@ export const GymProvider = ({ children }) => {
       addClientProgressPhotos,
       deleteClientProgressPhotos,
       addTrainerBlock,
+      supplements,
+      setSupplements,
+      supplementDiscounts,
+      setSupplementDiscounts,
       removeTrainerBlock,
       resetToDefault
     }}>

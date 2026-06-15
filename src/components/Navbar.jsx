@@ -31,6 +31,7 @@ export default function Navbar({ activeSection, setActiveSection }) {
         { id: 'classes', label: 'Timetable' },
         { id: 'pricing', label: 'Memberships' },
         { id: 'trainers', label: 'Trainers' },
+        ...(currentUser.role === 'member' ? [{ id: 'shop', label: '🧪 Shop', isShop: true }] : []),
         { id: 'portal', label: currentUser.role !== 'guest' ? `${currentUser.role.toUpperCase()} Portal` : 'Join Us', isCTA: true },
       ];
 
@@ -197,7 +198,7 @@ export default function Navbar({ activeSection, setActiveSection }) {
           </a>
         </nav>
       ) : (
-        <nav className="mobile-nav" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', width: '100%', boxSizing: 'border-box' }}>
+        <nav className="mobile-nav" style={{ display: 'grid', gridTemplateColumns: currentUser.role === 'member' ? 'repeat(5, 1fr)' : 'repeat(4, 1fr)', width: '100%', boxSizing: 'border-box' }}>
           <a 
             href="#home" 
             className={`mobile-nav-item ${activeSection === 'home' ? 'active' : ''}`}
@@ -228,6 +229,18 @@ export default function Navbar({ activeSection, setActiveSection }) {
             </svg>
             Pricing
           </a>
+          {currentUser.role === 'member' && (
+            <a 
+              href="#shop" 
+              className={`mobile-nav-item ${activeSection === 'shop' ? 'active' : ''}`}
+              onClick={(e) => { e.preventDefault(); setActiveSection('shop'); }}
+            >
+              <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
+              </svg>
+              Shop
+            </a>
+          )}
           <a 
             href="#portal" 
             className={`mobile-nav-item ${activeSection === 'portal' ? 'active' : ''}`}

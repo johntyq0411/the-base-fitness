@@ -10,6 +10,7 @@ import MemberDashboard from './components/MemberDashboard';
 import TrainerDashboard from './components/TrainerDashboard';
 import ConfigPanel from './components/ConfigPanel';
 import AssessmentWizard from './components/AssessmentWizard';
+import SupplementShop from './components/SupplementShop';
 import './App.css';
 
 function AppContent() {
@@ -298,6 +299,10 @@ function AppContent() {
             {activeSection === 'trainers' && <Trainers setActiveSection={setActiveSection} />}
 
             {activeSection === 'portal' && renderPortal()}
+
+            {activeSection === 'shop' && currentUser.role === 'member' && (
+              <SupplementShop setActiveSection={setActiveSection} />
+            )}
           </>
         )}
       </main>
