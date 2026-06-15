@@ -556,7 +556,23 @@ export const GymProvider = ({ children }) => {
   // Supplement catalog state
   const [supplements, setSupplements] = useState(() => {
     const saved = localStorage.getItem('bf_v3_supplements');
-    return saved ? JSON.parse(saved) : DEFAULT_SUPPLEMENTS;
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        // Force refresh catalog if it contains old webp or png generated placeholder images
+        const hasOldImages = parsed.some(p => {
+          if (p.image && (p.image.endsWith('.webp') || p.image.includes('mutant_'))) return true;
+          if (p.images && p.images.some(img => img.src.endsWith('.webp') || img.src.includes('mutant_'))) return true;
+          return false;
+        });
+        if (!hasOldImages) {
+          return parsed;
+        }
+      } catch (e) {
+        // fallback to default
+      }
+    }
+    return DEFAULT_SUPPLEMENTS;
   });
 
   // Supplement discount config state
