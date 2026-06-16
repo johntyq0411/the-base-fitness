@@ -1262,7 +1262,7 @@ export default function TrainerDashboard({ setActiveSection }) {
 
         {/* TAB 2: CLIENT MANAGEMENT */}
         {activeTab === 'clients' && (
-          <div className="grid-2" style={{ alignItems: 'start', gap: '2rem' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 2fr', alignItems: 'start', gap: '2rem' }}>
             
             {/* Left Column: Assigned Clients list */}
             <div>
